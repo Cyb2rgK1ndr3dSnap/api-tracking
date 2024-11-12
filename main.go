@@ -25,6 +25,7 @@ func main() {
 		c.Next()
 	})
 
+	go routes.UserRoutes(r)
 	routes.ShippingRoutes(r)
 
 	r.Run(":8000")

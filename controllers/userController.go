@@ -1,36 +1,83 @@
 package controllers
 
 import (
-	"fmt"
+	"database/sql"
 
 	"github.com/Cyb2rgK1ndr3dSnap/api-tracking/models"
 	"github.com/Cyb2rgK1ndr3dSnap/api-tracking/security"
+	"github.com/Cyb2rgK1ndr3dSnap/api-tracking/services"
 	"github.com/gin-gonic/gin"
 )
 
-func CreateUser(c *gin.Context) {
-	//db := c.MustGet("db").(*sql.DB)
+// Cambiar mensaje en cada status 400
+func RegisterUser(c *gin.Context) {
+	db := c.MustGet("db").(*sql.DB)
 
-	var Body models.User
+	var registerUser models.RegisterUser
 
-	err := c.ShouldBindJSON(&Body)
+	err := c.ShouldBindJSON(&registerUser)
 	if err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
 
-	hashedPassword, err := security.HashPassword(Body.Password)
-	if err != nil {
-		fmt.Println("Error hashing password:", err)
+	_, err = services.GetUserByEmail(registerUser.Email, db)
+	if err == nil {
+		c.JSON(400, gin.H{"error": "user with email already exists"})
 		return
 	}
-	fmt.Println("Hashed password:", hashedPassword)
+
+	if registerUser.Password != registerUser.ConfirmPassword {
+		c.JSON(400, gin.H{"error": "Passwords do not match"})
+		return
+	}
+
+	hashedPassword, err := security.HashPassword(registerUser.Password)
+	if err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
+	err = services.CreateUser(registerUser, hashedPassword, db)
+
+	if err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
 	c.JSON(200, gin.H{"message": "User created successfully"})
-	return
-	/*_, err = db.Exec("INSERT INTO users (id_user, name, lastname, email, direction, phone_number, cc, password) VALUES ($1, $2, $3, $4, $5, $6, $7,$8)",
-		Body.IDUser, Body.Name, Body.Lastname, Body.Email, Body.Direction, Body.PhoneNumber, Body.CC, hashedPassword)
+}
+
+func LoginUser(c *gin.Context) {
+	db := c.MustGet("db").(*sql.DB)
+
+	var loginUser models.LoginUser
+
+	err := c.ShouldBindJSON(&loginUser)
 	if err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
-	}*/
+	}
+
+	u, err := services.GetUserByEmail(loginUser.Email, db)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "user with that email not exists"})
+		return
+	}
+
+	if !security.CheckPasswordHash(loginUser.Password, u.Password) {
+		c.JSON(400, gin.H{"error": "invalid email or password"})
+		return
+	}
+
+	token, err := security.CreateJWT(*u)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "Interal error"})
+		return
+	}
+
+	u.Password = ""
+	u.Token = token
+
+	c.JSON(200, u)
 }

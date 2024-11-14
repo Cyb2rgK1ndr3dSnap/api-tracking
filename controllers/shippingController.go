@@ -61,7 +61,7 @@ func ReadShipping(c *gin.Context) {
 
 	var Body models.ReadShipping
 
-	err := c.ShouldBindJSON(&Body)
+	err := c.ShouldBindQuery(&Body)
 	if err != nil {
 		c.JSON(400, gin.H{"message": "user with that email not exists"})
 		return

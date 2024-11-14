@@ -31,7 +31,7 @@ func CreateJWT(user models.User) (string, error) {
 		"exp":         time.Now().Add(expiration).Unix(),
 	})
 
-	secret := []byte(os.Getenv("JWTSecret"))
+	secret := []byte(os.Getenv("JWTSECRET"))
 
 	tokenString, err := token.SignedString(secret)
 	if err != nil {
@@ -47,7 +47,7 @@ func validateJWT(tokenString string) (*jwt.Token, error) {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 
-		return []byte(os.Getenv("JWTSecret")), nil
+		return []byte(os.Getenv("JWTSECRET")), nil
 	})
 }
 

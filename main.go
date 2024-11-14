@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/Cyb2rgK1ndr3dSnap/api-tracking/initializers"
 	"github.com/Cyb2rgK1ndr3dSnap/api-tracking/routes"
@@ -14,6 +15,8 @@ func main() {
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
+
+	port := os.Getenv("PORT")
 
 	db := initializers.InitDB()
 	defer db.Close()
@@ -28,5 +31,5 @@ func main() {
 	go routes.UserRoutes(r)
 	routes.ShippingRoutes(r)
 
-	r.Run(":8000")
+	r.Run(":" + port)
 }

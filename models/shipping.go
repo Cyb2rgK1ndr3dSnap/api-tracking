@@ -27,6 +27,6 @@ type CreateShipping struct {
 }
 
 type ReadShipping struct {
-	Email          string `json:"email,omitempty"`
-	ShippingNumber string `json:"shipping_number,omitempty"`
+	Email          string `form:"email,omitempty"`
+	ShippingNumber string `form:"shipping_number,omitempty"`
 }

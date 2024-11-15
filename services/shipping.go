@@ -16,8 +16,8 @@ func CreateShipping(createS models.CreateShipping, db *sql.DB) error {
 }
 
 func UpdateShipping(updateS models.UpdateShipping, db *sql.DB) error {
-	_, err := db.Exec("UPDATE shippings SET shipping_number = $1, weight = $2, amount = $3, quantity = $4, status = $5, expiration_date = $6, id_user = $7 WHERE shipping_number = $1",
-		updateS.ShippingNumber, updateS.Weight, updateS.Amount, updateS.Quantity, updateS.Status, updateS.ExpirationDate, updateS.IDUser)
+	_, err := db.Exec("UPDATE shippings SET shipping_number = $1, weight = $2, amount = $3, quantity = $4, status = $5, expiration_date = $6, id_user = $7 WHERE id_shipping = $8",
+		updateS.ShippingNumber, updateS.Weight, updateS.Amount, updateS.Quantity, updateS.Status, updateS.ExpirationDate, updateS.IDUser, updateS.IDShipping)
 	if err != nil {
 		return err
 	}

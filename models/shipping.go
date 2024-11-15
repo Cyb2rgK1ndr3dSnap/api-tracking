@@ -33,6 +33,7 @@ type ReadShipping struct {
 }
 
 type UpdateShipping struct {
+	IDShipping     int       `json:"id_shipping" binding:"required"`
 	IDUser         int       `json:"id_user"`
 	Email          string    `json:"email"`
 	ShippingNumber string    `json:"shipping_number"`

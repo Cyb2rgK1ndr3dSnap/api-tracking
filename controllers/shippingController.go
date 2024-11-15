@@ -113,5 +113,5 @@ func UpdateShipping(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, gin.H{"message": "Shipping created successfully"})
+	c.JSON(200, gin.H{"message": "Shipping updated successfully"})
 }

@@ -5,6 +5,7 @@ import "time"
 type Shipping struct {
 	IDShipping     int       `json:"id_shipping,omitempty"`
 	IDUser         int       `json:"id_user"`
+	Email          string    `json:"email"`
 	ShippingNumber string    `json:"shipping_number"`
 	Weight         float64   `json:"weight"`
 	Amount         float64   `json:"amount"`
@@ -29,4 +30,15 @@ type CreateShipping struct {
 type ReadShipping struct {
 	Email          string `form:"email,omitempty"`
 	ShippingNumber string `form:"shipping_number,omitempty"`
+}
+
+type UpdateShipping struct {
+	IDUser         int       `json:"id_user"`
+	Email          string    `json:"email"`
+	ShippingNumber string    `json:"shipping_number"`
+	Weight         float64   `json:"weight"`
+	Amount         float64   `json:"amount"`
+	Quantity       int       `json:"quantity"`
+	Status         int       `json:"status"`
+	ExpirationDate time.Time `json:"expiration_date"`
 }

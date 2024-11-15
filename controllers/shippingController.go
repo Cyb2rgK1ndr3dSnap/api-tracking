@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/Cyb2rgK1ndr3dSnap/api-tracking/models"
 	"github.com/Cyb2rgK1ndr3dSnap/api-tracking/services"
@@ -30,26 +31,6 @@ func CreateShipping(c *gin.Context) {
 	err = services.CreateShipping(Body, db)
 	if err != nil {
 		c.JSON(400, gin.H{"message": "Error with Shipping data"})
-		return
-	}
-
-	c.JSON(200, gin.H{"message": "Shipping created successfully"})
-}
-
-func UpdateShipping(c *gin.Context) {
-	db := c.MustGet("db").(*sql.DB)
-
-	var Body models.CreateShipping
-
-	err := c.ShouldBindJSON(&Body)
-	if err != nil {
-		c.JSON(400, gin.H{"message": "user with that email not exists"})
-		return
-	}
-
-	err = services.UpdateShipping(Body, db)
-	if err != nil {
-		c.JSON(400, gin.H{"message": "Error with update Shipping data"})
 		return
 	}
 
@@ -89,6 +70,7 @@ func ReadShipping(c *gin.Context) {
 			&shipping.CreationDate,
 			&shipping.LastUpdate,
 			&shipping.ExpirationDate,
+			&shipping.Email,
 		)
 		if err != nil {
 			c.JSON(400, gin.H{"error": err.Error()})
@@ -103,4 +85,33 @@ func ReadShipping(c *gin.Context) {
 	}
 
 	c.JSON(200, shippings)
+}
+
+func UpdateShipping(c *gin.Context) {
+	db := c.MustGet("db").(*sql.DB)
+
+	var Body models.UpdateShipping
+
+	err := c.ShouldBindJSON(&Body)
+	if err != nil {
+		fmt.Println(err.Error())
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
+	u, err := services.GetUserByEmail(Body.Email, db)
+	if err != nil {
+		c.JSON(400, gin.H{"message": "user with that email not exists"})
+		return
+	}
+
+	Body.IDUser = u.IDUser
+
+	err = services.UpdateShipping(Body, db)
+	if err != nil {
+		c.JSON(400, gin.H{"message": "Error with update Shipping data"})
+		return
+	}
+
+	c.JSON(200, gin.H{"message": "Shipping created successfully"})
 }

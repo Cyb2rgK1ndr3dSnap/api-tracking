@@ -17,7 +17,7 @@ func RegisterUser(c *gin.Context) {
 
 	err := c.ShouldBindJSON(&registerUser)
 	if err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+		c.JSON(400, gin.H{"error": "Please fill all the required data"})
 		return
 	}
 
@@ -34,14 +34,14 @@ func RegisterUser(c *gin.Context) {
 
 	hashedPassword, err := security.HashPassword(registerUser.Password)
 	if err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+		c.JSON(400, gin.H{"error": "Error with server"})
 		return
 	}
 
 	err = services.CreateUser(registerUser, hashedPassword, db)
 
 	if err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+		c.JSON(400, gin.H{"error": "Error with the creation of user"})
 		return
 	}
 
@@ -55,7 +55,7 @@ func LoginUser(c *gin.Context) {
 
 	err := c.ShouldBindJSON(&loginUser)
 	if err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+		c.JSON(400, gin.H{"error": "Please fill all the required data"})
 		return
 	}
 

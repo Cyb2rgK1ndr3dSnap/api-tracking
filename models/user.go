@@ -25,6 +25,7 @@ type RegisterUser struct {
 	CC              string `json:"cc,omitempty"`
 	Password        string `json:"password" binding:"required"`
 	ConfirmPassword string `json:"confirm_password" binding:"required"`
+	Role            int    `json:"role" binding:"required"`
 }
 
 type LoginUser struct {

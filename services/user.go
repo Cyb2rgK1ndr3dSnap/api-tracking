@@ -9,7 +9,7 @@ import (
 
 func CreateUser(registerUser models.RegisterUser, hashedPassword string, db *sql.DB) error {
 	_, err := db.Exec("INSERT INTO users (firstname, lastname, email, direction, phone_number, id_role, cc, password) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
-		registerUser.FirstName, registerUser.LastName, registerUser.Email, registerUser.Direction, registerUser.PhoneNumber, 2, registerUser.CC, hashedPassword)
+		registerUser.FirstName, registerUser.LastName, registerUser.Email, registerUser.Direction, registerUser.PhoneNumber, registerUser.Role, registerUser.CC, hashedPassword)
 	if err != nil {
 		return err
 	}

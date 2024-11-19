@@ -1,26 +1,18 @@
-name: Snyk
-
-on:
-  push:
-
+name: Example workflow for Golang using Snyk
+on: push
 jobs:
   security:
     runs-on: ubuntu-latest
-    permissions: 
-      security-events: write # Ensure proper permissions for SARIF upload
-
     steps:
       - uses: actions/checkout@master
-
       - name: Run Snyk to check for vulnerabilities
         uses: snyk/actions/golang@master
-        continue-on-error: true # Ensures subsequent steps run even if Snyk finds issues
+        continue-on-error: true # To make sure that SARIF upload gets called
         env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }} # Ensure SNYK_TOKEN is configured in repository secrets
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           args: --sarif-file-output=snyk.sarif
-
       - name: Upload result to GitHub Code Scanning
-        uses: github/codeql-action/upload-sarif@v3 # Use the latest version to prevent deprecation warnings
+        uses: github/codeql-action/upload-sarif@v2
         with:
           sarif_file: snyk.sarif

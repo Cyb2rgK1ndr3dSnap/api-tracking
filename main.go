@@ -23,6 +23,8 @@ func main() {
 	db := initializers.InitDB()
 	defer db.Close()
 
+	gin.SetMode(gin.ReleaseMode)
+
 	r := gin.Default()
 
 	r.Use(func(c *gin.Context) {
@@ -30,8 +32,14 @@ func main() {
 		c.Next()
 	})
 
-	go routes.UserRoutes(r)
+	routes.RootRoute(r)
+	routes.UserRoutes(r)
 	routes.ShippingRoutes(r)
+	routes.TransactionRoutes(r)
 
-	r.Run(":" + port)
+	log.Println("Server is running on port:", port)
+
+	if err := r.Run("0.0.0.0:" + port); err != nil {
+		log.Fatal("Error starting the server: ", err)
+	}
 }

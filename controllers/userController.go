@@ -39,7 +39,6 @@ func RegisterUser(c *gin.Context) {
 	}
 
 	err = services.CreateUser(registerUser, hashedPassword, db)
-
 	if err != nil {
 		c.JSON(400, gin.H{"error": "Error with the creation of user"})
 		return

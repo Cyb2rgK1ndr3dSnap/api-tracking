@@ -22,7 +22,7 @@ type RegisterUser struct {
 	Email           string `json:"email" binding:"required"`
 	Direction       string `json:"direction,omitempty"`
 	PhoneNumber     string `json:"phone_number" binding:"required"`
-	CC              string `json:"cc,omitempty"`
+	CC              string `json:"cc" binding:"required"`
 	Password        string `json:"password" binding:"required"`
 	ConfirmPassword string `json:"confirm_password" binding:"required"`
 	Role            int    `json:"role" binding:"required"`

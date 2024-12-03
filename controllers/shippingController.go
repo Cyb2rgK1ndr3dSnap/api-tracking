@@ -75,6 +75,9 @@ func SearchShipping(c *gin.Context) {
 		return
 	}
 
+	Body.IDUser = c.MustGet("userID").(int)
+	Body.IDRole = c.MustGet("roleID").(int)
+
 	rows, err := services.SearchShipping(Body, db)
 	if err != nil {
 		c.JSON(400, gin.H{"error": "Not exist data matching"})

@@ -28,6 +28,8 @@ type CreateShipping struct {
 }
 
 type ReadShipping struct {
+	IDUser         int
+	IDRole         int
 	IDShipping     int    `form:"id_shipping ,omitempty"`
 	Email          string `form:"email,omitempty"`
 	ShippingNumber string `form:"shipping_number,omitempty"`

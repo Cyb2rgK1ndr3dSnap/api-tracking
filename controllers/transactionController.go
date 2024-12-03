@@ -60,5 +60,6 @@ func BalanceTransaction(c *gin.Context) {
 		return
 	}
 
+	//fmt.Sprintf("%.2f", balance)
 	c.JSON(200, gin.H{"balance": balance, "quantity": quantity})
 }

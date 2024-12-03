@@ -25,8 +25,8 @@ func UpdateTransaction(updateT models.UpdateTransaction, tx *sql.Tx) error {
 	return nil
 }
 
-func BalanceTransaction(userID int, db *sql.DB) (float32, error) {
-	var balance float32
+func BalanceTransaction(userID int, db *sql.DB) (float64, error) {
+	var balance float64
 	err := db.QueryRow("SELECT COALESCE(SUM(transaction_amount), 0) AS balance FROM transactions WHERE id_user = $1",
 		userID).Scan(&balance)
 	fmt.Println(err)

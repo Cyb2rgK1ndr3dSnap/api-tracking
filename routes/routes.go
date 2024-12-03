@@ -20,7 +20,7 @@ func UserRoutes(r *gin.Engine) {
 	userGroup := r.Group("/user")
 	{
 		userGroup.GET("", security.AuthMiddleware())
-		userGroup.POST("", security.AuthMiddleware(), security.AdminMiddleware(), controllers.RegisterUser)
+		userGroup.POST("", controllers.RegisterUser)
 		userGroup.POST("/login", controllers.LoginUser)
 	}
 }

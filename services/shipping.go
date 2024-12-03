@@ -35,27 +35,23 @@ func SearchShipping(readS models.ReadShipping, db *sql.DB) (*sql.Rows, error) {
 	var args []interface{}
 	argIndex := 1 // Contador dinámico para los índices de los parámetros
 
-	// Condición para Email
-	if readS.Email != "" {
+	if readS.Email != "" && readS.IDRole == 1 {
 		query += fmt.Sprintf(" AND u.email = $%d", argIndex)
 		args = append(args, readS.Email)
 		argIndex++
-	}
-
-	// Condición para ShippingNumber
-	if readS.ShippingNumber != "" {
+	} else if readS.ShippingNumber != "" {
 		query += fmt.Sprintf(" AND s.shipping_number = $%d", argIndex)
 		args = append(args, readS.ShippingNumber)
 		argIndex++
-	}
-
-	// Condición para IDShipping
-	if readS.IDShipping != 0 {
+	} else if readS.IDShipping != 0 {
 		query += fmt.Sprintf(" AND s.id_shipping = $%d", argIndex)
 		args = append(args, readS.IDShipping)
 		argIndex++
+	} else {
+		query += fmt.Sprintf(" AND s.id_user = $%d", argIndex)
+		args = append(args, readS.IDUser)
+		argIndex++
 	}
-
 	rows, err := db.Query(query, args...)
 	if err != nil {
 		return nil, err
@@ -76,7 +72,6 @@ func QuantityShipping(quantityShipping models.QuantityShipping, db *sql.DB) (int
 	var quantity int
 	err := db.QueryRow("SELECT COALESCE(SUM(quantity),0) AS quantity FROM shippings WHERE id_user = $1 and status = $2",
 		quantityShipping.IDUser, quantityShipping.Status).Scan(&quantity)
-	fmt.Println(err)
 	if err != nil {
 		return 0, err
 	}

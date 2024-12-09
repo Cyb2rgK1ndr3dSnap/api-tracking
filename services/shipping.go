@@ -26,7 +26,7 @@ func UpdateShipping(updateS models.UpdateShipping, tx *sql.Tx) error {
 	return nil
 }
 
-func SearchShipping(readS models.ReadShipping, db *sql.DB) (*sql.Rows, error) {
+func GetShipping(readS models.ReadShipping, db *sql.DB) (*sql.Rows, error) {
 	query := `SELECT s.*, u.email
               FROM shippings s
               JOIN users u ON s.id_user = u.id_user
@@ -59,7 +59,27 @@ func SearchShipping(readS models.ReadShipping, db *sql.DB) (*sql.Rows, error) {
 	return rows, nil
 }
 
-func StatusShipping(idShipping int, db *sql.DB) (int, error) {
+func GetShippingByID(idShipping int, db *sql.DB) (*models.Shipping, error) {
+	u := new(models.Shipping)
+	err := db.QueryRow("SELECT * FROM Shippings WHERE id_shipping = $1", idShipping).Scan(
+		&u.IDShipping,
+		&u.IDUser,
+		&u.ShippingNumber,
+		&u.Weight,
+		&u.Amount,
+		&u.Quantity,
+		&u.Status,
+		&u.Created_date,
+		&u.LastUpdate,
+		&u.ExpirationDate,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return u, nil
+}
+
+func StatusShippingByID(idShipping int, db *sql.DB) (int, error) {
 	var status int
 	err := db.QueryRow("SELECT status FROM Shippings WHERE id_shipping = $1", idShipping).Scan(&status)
 	if err != nil {

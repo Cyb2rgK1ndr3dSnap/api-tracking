@@ -20,32 +20,31 @@ type CreateShipping struct {
 	IDUser         int       `json:"id_user"`
 	Email          string    `json:"email" binding:"required"`
 	ShippingNumber string    `json:"shipping_number" binding:"required"`
-	Weight         float64   `json:"weight" binding:"required"`
-	Amount         float64   `json:"amount" binding:"required"`
-	Quantity       int       `json:"quantity" binding:"required"`
-	Status         int       `json:"status,omitempty"`
+	Weight         float64   `json:"weight" binding:"required, gt=0"`
+	Amount         float64   `json:"amount" binding:"required, gt=0"`
+	Quantity       int       `json:"quantity" binding:"required, gt=0"`
+	Status         int       `json:"-"`
 	ExpirationDate time.Time `json:"expiration_date" binding:"required"`
 }
 
 type ReadShipping struct {
-	IDUser         int
-	IDRole         int
+	IDUser         int    `form:"-"`
+	IDRole         int    `form:"-"`
 	IDShipping     int    `form:"id_shipping ,omitempty"`
 	Email          string `form:"email,omitempty"`
 	ShippingNumber string `form:"shipping_number,omitempty"`
 }
 
 type UpdateShipping struct {
-	IDShipping        int       `json:"id_shipping" binding:"required"`
-	IDUser            int       `json:"id_user"`
-	Email             string    `json:"email"`
-	ShippingNumber    string    `json:"shipping_number"`
-	Weight            float64   `json:"weight"`
-	Amount            float64   `json:"amount"`
-	Quantity          int       `json:"quantity"`
-	Status            int       `json:"status"`
-	IDTransactionType int       `json:"id_transaction_type" binding:"required"`
-	ExpirationDate    time.Time `json:"expiration_date"`
+	IDShipping     int       `json:"id_shipping" binding:"required"`
+	IDUser         int       `json:"id_user"`
+	Email          string    `json:"email"`
+	ShippingNumber string    `json:"shipping_number" binding:"required"`
+	Weight         float64   `json:"weight" binding:"required, gt=0"`
+	Amount         float64   `json:"amount"  binding:"required, gt=0"`
+	Quantity       int       `json:"quantity"  binding:"required, gt=0"`
+	Status         int       `json:"-"`
+	ExpirationDate time.Time `json:"expiration_date" binding:"required"`
 }
 
 type CloseShipping struct {
@@ -53,6 +52,6 @@ type CloseShipping struct {
 }
 
 type QuantityShipping struct {
-	IDUser int
+	IDUser int `json:"-"`
 	Status int `form:"status"`
 }

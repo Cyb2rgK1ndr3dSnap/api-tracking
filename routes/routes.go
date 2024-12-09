@@ -28,7 +28,7 @@ func UserRoutes(r *gin.Engine) {
 func ShippingRoutes(r *gin.Engine) {
 	shippingGroup := r.Group("/shipping")
 	{
-		shippingGroup.GET("", security.AuthMiddleware(), controllers.SearchShipping)
+		shippingGroup.GET("", security.AuthMiddleware(), controllers.GetShipping)
 		shippingGroup.POST("", security.AuthMiddleware(), security.AdminMiddleware(), controllers.CreateShipping)
 		shippingGroup.PUT("", security.AuthMiddleware(), security.AdminMiddleware(), controllers.UpdateShipping)
 		shippingGroup.POST("/close", security.AuthMiddleware(), security.AdminMiddleware(), controllers.CloseShipping)

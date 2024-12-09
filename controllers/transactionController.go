@@ -8,6 +8,16 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// @Summary Creación de transacción
+// @Description Realiza el guardado de la transacción que se quiere crear en la BD
+// @Tags Transaction
+// @Security JWT
+// @Accept json
+// @Produce application/json
+// @Param shipping body models.CreateTransaction true "crea transacción"
+// @Success 200 {object} models.SuccessMessage "mensaje de éxito"
+// @Failure 400 {object} models.ErrorMessage "Error en los datos proporcionados"
+// @Router /shipping [post]
 func CreateTransaction(c *gin.Context) {
 	db := c.MustGet("db").(*sql.DB)
 
@@ -15,51 +25,54 @@ func CreateTransaction(c *gin.Context) {
 
 	err := c.ShouldBindJSON(&Body)
 	if err != nil {
-		c.JSON(400, gin.H{"message": "Please complete all the required data"})
+		c.JSON(400, gin.H{"error": "Please complete all the required data"})
 		return
 	}
 
 	tx, err := db.Begin()
 	if err != nil {
-		c.JSON(400, gin.H{"message": "Error with server"})
+		c.JSON(400, gin.H{"error": "Error with server"})
 		return
 	}
 
 	err = services.CreateTransaction(Body, tx)
 	if err != nil {
 		tx.Rollback()
-		c.JSON(400, gin.H{"message": "Error with save data"})
+		c.JSON(400, gin.H{"error": "Error with save data"})
 		return
 	}
 
 	c.JSON(200, gin.H{"message": "Transaction create successfully"})
 }
 
+// @Summary Estado de cuenta de usuario
+// @Tags Transaction
+// @Security JWT
+// @Produce application/json
+// @Success 200 {object} models.BalanceTransaction "ESTADO DE SALDO Y PAQUETES QUE TIENE"
+// @Failure 400 {object} models.ErrorMessage "Error en los datos proporcionados"
+// @Router /transaction [get]
 func BalanceTransaction(c *gin.Context) {
 	db := c.MustGet("db").(*sql.DB)
 
 	var Body models.QuantityShipping
-
-	err := c.ShouldBindQuery(&Body)
-	if err != nil {
-		c.JSON(400, gin.H{"message": "Please fill all the required data"})
-		return
-	}
+	var balance models.BalanceTransaction
+	var err error
 
 	Body.IDUser = c.MustGet("userID").(int)
+	Body.Status = 2
 
-	balance, err := services.BalanceTransaction(Body.IDUser, db)
+	balance.Balance, err = services.BalanceTransaction(Body.IDUser, db)
 	if err != nil {
 		c.JSON(400, gin.H{"error": "Error with server"})
 		return
 	}
 
-	quantity, err := services.QuantityShipping(Body, db)
+	balance.Quantity, err = services.QuantityShipping(Body, db)
 	if err != nil {
 		c.JSON(400, gin.H{"error": "Error with server"})
 		return
 	}
 
-	//fmt.Sprintf("%.2f", balance)
-	c.JSON(200, gin.H{"balance": balance, "quantity": quantity})
+	c.JSON(200, balance)
 }

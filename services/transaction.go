@@ -17,8 +17,8 @@ func CreateTransaction(createT models.CreateTransaction, tx *sql.Tx) error {
 }
 
 func UpdateTransaction(updateT models.UpdateTransaction, tx *sql.Tx) error {
-	_, err := tx.Exec("UPDATE transactions SET id_user=$1, id_transaction_type=$2, transaction_amount=$3 WHERE id_shipping = $4",
-		updateT.IDUser, updateT.IDTransactionType, updateT.Amount, updateT.IDShipping)
+	_, err := tx.Exec("UPDATE transactions SET id_user=$1, transaction_amount=$2 WHERE id_shipping = $3",
+		updateT.IDUser, updateT.Amount, updateT.IDShipping)
 	if err != nil {
 		return err
 	}

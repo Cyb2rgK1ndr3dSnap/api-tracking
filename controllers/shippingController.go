@@ -8,6 +8,16 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// @Summary Creación de paquete
+// @Description Realiza el guardado del paquete que se quiere crear en la BD y una transacción se abre
+// @Tags Shipping
+// @Security JWT
+// @Accept json
+// @Produce application/json
+// @Param shipping body models.CreateShipping true "crea paquete y transacción"
+// @Success 200 {object} models.SuccessMessage "mensaje de éxito"
+// @Failure 400 {object} models.ErrorMessage "Error en los datos proporcionados"
+// @Router /shipping [post]
 func CreateShipping(c *gin.Context) {
 	db := c.MustGet("db").(*sql.DB)
 
@@ -64,7 +74,18 @@ func CreateShipping(c *gin.Context) {
 	c.JSON(200, gin.H{"message": "Shipping created successfully"})
 }
 
-func SearchShipping(c *gin.Context) {
+// @Summary Busqueda de paquetes
+// @Description Realiza la busqueda de pedidos del usuario por defecto o email, id de paquete o número de paquete
+// @Tags Shipping
+// @Security JWT
+// @Param email query string false "Correo electrónico del usuario a buscar"
+// @Param shipping_number query int false "Código de paquete a buscar"
+// @Param id_shipping query int false "Id de paquete a buscar"
+// @Produce application/json
+// @Success 200 {array} models.Shipping "Lista de paquetes encontrados"
+// @Failure 400 {object} models.ErrorMessage "Error en los datos proporcionados"
+// @Router /shipping [get]
+func GetShipping(c *gin.Context) {
 	db := c.MustGet("db").(*sql.DB)
 
 	var Body models.ReadShipping
@@ -78,7 +99,7 @@ func SearchShipping(c *gin.Context) {
 	Body.IDUser = c.MustGet("userID").(int)
 	Body.IDRole = c.MustGet("roleID").(int)
 
-	rows, err := services.SearchShipping(Body, db)
+	rows, err := services.GetShipping(Body, db)
 	if err != nil {
 		c.JSON(400, gin.H{"error": "Not exist data matching"})
 		return
@@ -117,6 +138,15 @@ func SearchShipping(c *gin.Context) {
 	c.JSON(200, shippings)
 }
 
+// @Summary Actualización de datos de paquete
+// @Tags Shipping
+// @Security JWT
+// @Accept json
+// @Produce application/json
+// @Param shipping body models.UpdateShipping true "actualiza los datos del paquete"
+// @Success 200 {object} models.SuccessMessage "mensaje de éxito"
+// @Failure 400 {object} models.ErrorMessage "Error en el proceso"
+// @Router /shipping [put]
 func UpdateShipping(c *gin.Context) {
 	db := c.MustGet("db").(*sql.DB)
 
@@ -128,7 +158,7 @@ func UpdateShipping(c *gin.Context) {
 		return
 	}
 
-	currentStatus, err := services.StatusShipping(Body.IDShipping, db)
+	currentStatus, err := services.StatusShippingByID(Body.IDShipping, db)
 	if err != nil {
 		c.JSON(400, gin.H{"error": "Shipping not found"})
 		return
@@ -160,10 +190,9 @@ func UpdateShipping(c *gin.Context) {
 	}
 
 	transaction := models.UpdateTransaction{
-		IDUser:            Body.IDUser,
-		IDShipping:        Body.IDShipping,
-		IDTransactionType: Body.IDTransactionType,
-		Amount:            Body.Amount,
+		IDUser:     Body.IDUser,
+		IDShipping: Body.IDShipping,
+		Amount:     Body.Amount,
 	}
 
 	err = services.UpdateTransaction(transaction, tx)
@@ -181,47 +210,29 @@ func UpdateShipping(c *gin.Context) {
 	c.JSON(200, gin.H{"message": "Shipping updated successfully"})
 }
 
+// @Summary Cerrar paquete y creación de transacción
+// @Tags Shipping
+// @Security JWT
+// @Accept json
+// @Produce application/json
+// @Param shipping body models.CloseShipping true "toma el id del paquete para cerrarlo y crear transacción de cierre"
+// @Success 200 {object} models.SuccessMessage "mensaje de éxito"
+// @Failure 400 {object} models.ErrorMessage "Error en el proceso"
+// @Router /shipping/close [post]
 func CloseShipping(c *gin.Context) {
 	db := c.MustGet("db").(*sql.DB)
 
-	var Body models.ReadShipping
+	var Body models.CloseShipping
 
 	err := c.ShouldBindQuery(&Body)
 	if err != nil {
-		c.JSON(400, gin.H{"message": "Please fill all the required data"})
+		c.JSON(400, gin.H{"error": "Please fill all the required data"})
 		return
 	}
 
-	rows, err := services.SearchShipping(Body, db)
+	shipping, err := services.GetShippingByID(Body.IDShipping, db)
 	if err != nil {
 		c.JSON(400, gin.H{"error": "Not exist data matching"})
-		return
-	}
-
-	defer rows.Close()
-
-	var shipping models.Shipping
-
-	if rows.Next() {
-		err := rows.Scan(
-			&shipping.IDShipping,
-			&shipping.IDUser,
-			&shipping.ShippingNumber,
-			&shipping.Weight,
-			&shipping.Amount,
-			&shipping.Quantity,
-			&shipping.Status,
-			&shipping.Created_date,
-			&shipping.LastUpdate,
-			&shipping.ExpirationDate,
-			&shipping.Email,
-		)
-		if err != nil {
-			c.JSON(400, gin.H{"error": "Error with database"})
-			return
-		}
-	} else {
-		c.JSON(404, gin.H{"error": "No shipping data found"})
 		return
 	}
 
@@ -239,19 +250,19 @@ func CloseShipping(c *gin.Context) {
 
 	tx, err := db.Begin()
 	if err != nil {
-		c.JSON(400, gin.H{"message": "Error with server"})
+		c.JSON(400, gin.H{"error": "Error with server"})
 		return
 	}
 
 	err = services.CreateTransaction(transaction, tx)
 	if err != nil {
 		tx.Rollback()
-		c.JSON(400, gin.H{"message": "Error with save data"})
+		c.JSON(400, gin.H{"error": "Error with save data"})
 		return
 	}
 	err = tx.Commit()
 	if err != nil {
-		c.JSON(400, gin.H{"message": "Error with save data"})
+		c.JSON(400, gin.H{"error": "Error with save data"})
 		return
 	}
 

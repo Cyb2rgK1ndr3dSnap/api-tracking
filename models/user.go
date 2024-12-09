@@ -10,7 +10,7 @@ type User struct {
 	Direction   string    `json:"direction,omitempty"`
 	PhoneNumber string    `json:"phone_number,omitempty"`
 	CC          string    `json:"cc,omitempty"`
-	Password    string    `json:"password,omitempty"`
+	Password    string    `json:"-"`
 	IDRole      int       `json:"id_role,omitempty"`
 	CreatedDate time.Time `json:"created_date,omitempty"`
 	Token       string    `json:"token,omitempty"`
@@ -19,12 +19,13 @@ type User struct {
 type RegisterUser struct {
 	FirstName       string `json:"firstname" binding:"required"`
 	LastName        string `json:"lastname,omitempty"`
-	Email           string `json:"email" binding:"required"`
+	Email           string `json:"email" binding:"required,email"`
 	Direction       string `json:"direction,omitempty"`
 	PhoneNumber     string `json:"phone_number" binding:"required"`
-	CC              string `json:"cc,omitempty"`
-	Password        string `json:"password" binding:"required"`
-	ConfirmPassword string `json:"confirm_password" binding:"required"`
+	CC              string `json:"cc" binding:"required"`
+	Password        string `json:"password" binding:"required,min=8"`
+	ConfirmPassword string `json:"confirm_password" binding:"required,eqfield=Password"`
+	Role            int    `json:"-"`
 }
 
 type LoginUser struct {

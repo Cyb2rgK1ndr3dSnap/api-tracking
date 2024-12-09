@@ -1,7 +1,6 @@
 package security
 
 import (
-	"fmt"
 	"os"
 	"strconv"
 	"time"
@@ -10,6 +9,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 )
+
+type CustomClaims struct {
+	UserID int `json:"userID"`
+	RoleID int `json:"roleID"`
+	jwt.RegisteredClaims
+}
 
 func CreateJWT(user models.User) (string, error) {
 	expirationSeconds, err := strconv.Atoi(os.Getenv("JWT_EXPIRATION_IN_SECONDS"))
@@ -20,7 +25,7 @@ func CreateJWT(user models.User) (string, error) {
 	expiration := time.Second * time.Duration(expirationSeconds)
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"userID":      strconv.Itoa(int(user.IDUser)),
+		"userID":      user.IDUser,
 		"name":        user.FirstName,
 		"lastname":    user.LastName,
 		"email":       user.Email,
@@ -41,21 +46,15 @@ func CreateJWT(user models.User) (string, error) {
 	return tokenString, err
 }
 
-func validateJWT(tokenString string) (*jwt.Token, error) {
-	return jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-		}
-
-		return []byte(os.Getenv("JWTSECRET")), nil
-	})
-}
-
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tokenString := c.GetHeader("Authorization")
 
-		token, err := validateJWT(tokenString)
+		claims := &CustomClaims{}
+
+		token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+			return []byte(os.Getenv("JWTSECRET")), nil
+		})
 
 		if err != nil || !token.Valid {
 			c.JSON(401, gin.H{"error": "Unauthorized"})
@@ -63,13 +62,8 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		claims := token.Claims.(jwt.MapClaims)
-		//c.JSON(200, gin.H{"mess": claims})
-		//str := claims["userID"].(string)
-
-		c.Set("user_id", claims["userID"])
-		//c.Set("username", claims.Username)
-		//c.Set("role", claims.Role)
+		c.Set("userID", claims.UserID)
+		c.Set("roleID", claims.RoleID)
 
 		c.Next()
 	}

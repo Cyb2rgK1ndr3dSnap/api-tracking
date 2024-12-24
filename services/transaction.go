@@ -3,6 +3,8 @@ package services
 import (
 	"database/sql"
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/Cyb2rgK1ndr3dSnap/api-tracking/models"
 )
@@ -17,11 +19,30 @@ func CreateTransaction(createT models.CreateTransaction, tx *sql.Tx) error {
 }
 
 func UpdateTransaction(updateT models.UpdateTransaction, tx *sql.Tx) error {
-	_, err := tx.Exec("UPDATE transactions SET id_user=$1, transaction_amount=$2 WHERE id_shipping = $3",
-		updateT.IDUser, updateT.Amount, updateT.IDShipping)
+	var queryParts []string
+	var args []interface{}
+	var counter int = 1
+
+	if updateT.IDUser != 0 {
+		queryParts = append(queryParts, "id_user = $"+strconv.Itoa(counter))
+		args = append(args, updateT.IDUser)
+		counter++
+	}
+
+	if updateT.Amount != 0 {
+		queryParts = append(queryParts, "transaction_amount = $"+strconv.Itoa(counter))
+		args = append(args, updateT.Amount)
+		counter++
+	}
+
+	query := "UPDATE transactions SET " + strings.Join(queryParts, ", ") + " WHERE id_shipping = $" + strconv.Itoa(counter)
+	args = append(args, updateT.IDShipping)
+
+	_, err := tx.Exec(query, args...)
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 

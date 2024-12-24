@@ -5,6 +5,7 @@ import (
 
 	"github.com/Cyb2rgK1ndr3dSnap/api-tracking/models"
 	"github.com/Cyb2rgK1ndr3dSnap/api-tracking/services"
+	"github.com/Cyb2rgK1ndr3dSnap/api-tracking/utils"
 	"github.com/gin-gonic/gin"
 )
 
@@ -118,7 +119,6 @@ func GetShipping(c *gin.Context) {
 			&shipping.Amount,
 			&shipping.Quantity,
 			&shipping.Status,
-			&shipping.Created_date,
 			&shipping.LastUpdate,
 			&shipping.ExpirationDate,
 			&shipping.Email,
@@ -185,6 +185,7 @@ func UpdateShipping(c *gin.Context) {
 
 	err = services.UpdateShipping(Body, tx)
 	if err != nil {
+		tx.Rollback()
 		c.JSON(400, gin.H{"error": "Error with update Shipping data"})
 		return
 	}
@@ -197,13 +198,15 @@ func UpdateShipping(c *gin.Context) {
 
 	err = services.UpdateTransaction(transaction, tx)
 	if err != nil {
+		tx.Rollback()
 		c.JSON(400, gin.H{"error": "Error with update Shipping data"})
 		return
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		c.JSON(400, gin.H{"message": "Error with save data"})
+		tx.Rollback()
+		c.JSON(400, gin.H{"error": "Error with save data"})
 		return
 	}
 
@@ -248,9 +251,21 @@ func CloseShipping(c *gin.Context) {
 		Amount:            (shipping.Amount * -1),
 	}
 
+	shippingU := models.UpdateShipping{
+		IDShipping: shipping.IDShipping,
+		Status:     1,
+	}
+
 	tx, err := db.Begin()
 	if err != nil {
 		c.JSON(400, gin.H{"error": "Error with server"})
+		return
+	}
+
+	err = services.UpdateShipping(shippingU, tx)
+	if err != nil {
+		tx.Rollback()
+		c.JSON(400, gin.H{"error": "Error with update Shipping data"})
 		return
 	}
 
@@ -260,11 +275,32 @@ func CloseShipping(c *gin.Context) {
 		c.JSON(400, gin.H{"error": "Error with save data"})
 		return
 	}
+
 	err = tx.Commit()
 	if err != nil {
+		tx.Rollback()
 		c.JSON(400, gin.H{"error": "Error with save data"})
 		return
 	}
+
+	rows, err := services.ReadDevices(shipping.IDUser, db)
+	defer rows.Close()
+	var devices = make([]string, 0, 10)
+	for rows.Next() {
+		var token string
+		err := rows.Scan(
+			&token,
+		)
+		if err != nil {
+			c.JSON(400, gin.H{"error": "Error with database"})
+			return
+		}
+		devices = append(devices, token)
+	}
+
+	go func(devices []string) {
+		utils.SendPushNotification(devices, "Shipping closed", "Your shipping has been closed")
+	}(devices)
 
 	c.JSON(200, gin.H{"message": "Shipping Closed successfully"})
 }

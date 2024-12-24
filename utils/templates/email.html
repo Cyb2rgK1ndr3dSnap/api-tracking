@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activación de Cuenta</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f4;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            text-align: center;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .token-display {
+            margin-bottom: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+        .copy-button {
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 16px;
+            color: #000000;
+            text-decoration: none;
+            border-radius: 5px;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="tokenDisplay" class="token-display">
+            <p>Gracias por registrarte. Este es su código para la activar cuenta:</p>
+            <p class="copy-button">{{.Token}}</p>
+        </div>
+        <p style="margin-top: 20px;">Si no solicitaste esta cuenta, ignora este correo.</p>
+    </div>
+</body>
+</html>

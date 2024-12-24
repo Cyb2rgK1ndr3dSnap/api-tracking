@@ -19,9 +19,9 @@ type CreateTransaction struct {
 }
 
 type UpdateTransaction struct {
-	IDUser     int     `json:"id_user" binding:"required"`
+	IDUser     int     `json:"id_user,omitempty"`
 	IDShipping int     `json:"id_shipping" binding:"required"`
-	Amount     float64 `json:"amount" binding:"required, gt=0"`
+	Amount     float64 `json:"amount,omitempty" binding:"gt=0"`
 }
 
 type BalanceTransaction struct {

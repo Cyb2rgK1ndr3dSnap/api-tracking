@@ -3,6 +3,8 @@ package services
 import (
 	"database/sql"
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/Cyb2rgK1ndr3dSnap/api-tracking/models"
 )
@@ -18,19 +20,64 @@ func CreateShipping(createS models.CreateShipping, tx *sql.Tx) (int, error) {
 }
 
 func UpdateShipping(updateS models.UpdateShipping, tx *sql.Tx) error {
-	_, err := tx.Exec("UPDATE shippings SET shipping_number = $1, weight = $2, amount = $3, quantity = $4, status = $5, expiration_date = $6, id_user = $7 WHERE id_shipping = $8",
-		updateS.ShippingNumber, updateS.Weight, updateS.Amount, updateS.Quantity, updateS.Status, updateS.ExpirationDate, updateS.IDUser, updateS.IDShipping)
+	// Inicializar las partes de la consulta y los valores
+	var queryParts []string
+	var args []interface{}
+	var counter int = 1
+
+	if updateS.ShippingNumber != "" {
+		queryParts = append(queryParts, "shipping_number = $"+strconv.Itoa(counter))
+		args = append(args, updateS.ShippingNumber)
+		counter++
+	}
+
+	if updateS.Weight != 0 {
+		queryParts = append(queryParts, "weight = $"+strconv.Itoa(counter))
+		args = append(args, updateS.Weight)
+		counter++
+	}
+
+	if updateS.Amount != 0 {
+		queryParts = append(queryParts, "amount = $"+strconv.Itoa(counter))
+		args = append(args, updateS.Amount)
+		counter++
+	}
+
+	if updateS.Quantity != 0 {
+		queryParts = append(queryParts, "quantity = $"+strconv.Itoa(counter))
+		args = append(args, updateS.Quantity)
+		counter++
+	}
+
+	if updateS.ExpirationDate.String() != "" {
+		queryParts = append(queryParts, "expiration_date = $"+strconv.Itoa(counter))
+		args = append(args, updateS.ExpirationDate)
+		counter++
+	}
+
+	if updateS.IDUser != 0 {
+		queryParts = append(queryParts, "id_user = $"+strconv.Itoa(counter))
+		args = append(args, updateS.IDUser)
+		counter++
+	}
+
+	query := "UPDATE shippings SET " + strings.Join(queryParts, ", ") + " WHERE id_shipping = $" + strconv.Itoa(counter)
+	args = append(args, updateS.IDShipping)
+
+	// Ejecutar la consulta
+	_, err := tx.Exec(query, args...)
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
 func GetShipping(readS models.ReadShipping, db *sql.DB) (*sql.Rows, error) {
-	query := `SELECT s.*, u.email
-              FROM shippings s
-              JOIN users u ON s.id_user = u.id_user
-              WHERE 1=1`
+	query := `SELECT s.id_shipping, s.id_user, s.shipping_number, s.weight, s.amount, s.quantity, s.status, s.last_update, s.expiration_date , u.email 
+			  FROM shippings s
+			  JOIN users u ON s.id_user = u.id_user 
+			  WHERE 1=1;`
 
 	var args []interface{}
 	argIndex := 1 // Contador dinámico para los índices de los parámetros
@@ -54,6 +101,9 @@ func GetShipping(readS models.ReadShipping, db *sql.DB) (*sql.Rows, error) {
 	}
 	rows, err := db.Query(query, args...)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
 		return nil, err
 	}
 	return rows, nil

@@ -29,9 +29,14 @@ func RegisterUser(c *gin.Context) {
 		return
 	}
 
-	_, err = services.GetUserByEmail(registerUser.Email, db)
-	if err == nil {
-		c.JSON(400, gin.H{"error": "user with email already exists"})
+	u, err := services.GetUserByUsername(registerUser.Email, db)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "Error with server"})
+		return
+	}
+
+	if u != nil {
+		c.JSON(400, gin.H{"error": "username already exists"})
 		return
 	}
 
@@ -48,13 +53,39 @@ func RegisterUser(c *gin.Context) {
 
 	registerUser.Role = 2
 
-	err = services.CreateUser(registerUser, hashedPassword, db)
+	/*tx, err := db.Begin()
 	if err != nil {
-		c.JSON(400, gin.H{"error": "Error with the creation of user"})
+		c.JSON(400, gin.H{"message": "Error with server"})
+		return
+	}*/
+
+	err = services.RegisterUser(registerUser, hashedPassword, db)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "Error with the register of user"})
 		return
 	}
+	/*
+			errChan, err := utils.ExecuteSend(id)
+			if err != nil {
+				tx.Rollback()
+				c.JSON(400, gin.H{"error": "Error with the register of user " + err.Error()})
+				return
+			}
+			// Esperar a que la goroutine envíe el error a través del canal
+			if err := <-errChan; err != nil {
+				tx.Rollback()
+				c.JSON(400, gin.H{"error": "Error with the register of user " + err.Error()})
+				return
+			}
 
-	c.JSON(200, gin.H{"message": "User created successfully"})
+		err = tx.Commit()
+		if err != nil {
+			tx.Rollback()
+			c.JSON(400, gin.H{"error": "Error with the register of user"})
+			return
+		}*/
+
+	c.JSON(200, gin.H{"message": "Registered user"})
 }
 
 // @Summary Inicio de sesión de usuario
@@ -69,6 +100,7 @@ func RegisterUser(c *gin.Context) {
 func LoginUser(c *gin.Context) {
 	db := c.MustGet("db").(*sql.DB)
 
+	var u *models.User
 	var loginUser models.LoginUser
 
 	err := c.ShouldBindJSON(&loginUser)
@@ -77,14 +109,14 @@ func LoginUser(c *gin.Context) {
 		return
 	}
 
-	u, err := services.GetUserByEmail(loginUser.Email, db)
+	u, err = services.GetUserByUsername(loginUser.Email, db)
 	if err != nil {
-		c.JSON(400, gin.H{"error": "user with that email not exists"})
+		c.JSON(400, gin.H{"error": "invalid user or password"})
 		return
 	}
 
 	if !security.CheckPasswordHash(loginUser.Password, u.Password) {
-		c.JSON(400, gin.H{"error": "invalid email or password"})
+		c.JSON(400, gin.H{"error": "invalid user or password"})
 		return
 	}
 
@@ -93,6 +125,13 @@ func LoginUser(c *gin.Context) {
 		c.JSON(400, gin.H{"error": "Interal error"})
 		return
 	}
+
+	RegisterToken := models.RegisterToken{
+		IDUser: u.IDUser,
+		Token:  loginUser.Token,
+	}
+
+	services.RegisterDevice(RegisterToken, db)
 
 	u.Password = ""
 	u.Token = token

@@ -64,6 +64,8 @@ definitions:
         type: string
       password:
         type: string
+      token:
+        type: string
     required:
     - email
     - password
@@ -71,8 +73,6 @@ definitions:
   models.RegisterUser:
     properties:
       cc:
-        type: string
-      confirm_password:
         type: string
       direction:
         type: string
@@ -85,15 +85,20 @@ definitions:
       password:
         minLength: 8
         type: string
-      phone_number:
+      passwordc:
+        type: string
+      phonenumber:
+        type: string
+      username:
         type: string
     required:
     - cc
-    - confirm_password
     - email
     - firstname
     - password
-    - phone_number
+    - passwordc
+    - phonenumber
+    - username
     type: object
   models.Shipping:
     properties:
@@ -169,6 +174,8 @@ definitions:
       phone_number:
         type: string
       token:
+        type: string
+      username:
         type: string
     type: object
 info:

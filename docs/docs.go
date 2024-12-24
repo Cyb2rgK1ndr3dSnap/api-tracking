@@ -409,6 +409,9 @@ const docTemplate = `{
                 },
                 "password": {
                     "type": "string"
+                },
+                "token": {
+                    "type": "string"
                 }
             }
         },
@@ -416,17 +419,15 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "cc",
-                "confirm_password",
                 "email",
                 "firstname",
                 "password",
-                "phone_number"
+                "passwordc",
+                "phonenumber",
+                "username"
             ],
             "properties": {
                 "cc": {
-                    "type": "string"
-                },
-                "confirm_password": {
                     "type": "string"
                 },
                 "direction": {
@@ -445,7 +446,13 @@ const docTemplate = `{
                     "type": "string",
                     "minLength": 8
                 },
-                "phone_number": {
+                "passwordc": {
+                    "type": "string"
+                },
+                "phonenumber": {
+                    "type": "string"
+                },
+                "username": {
                     "type": "string"
                 }
             }
@@ -562,6 +569,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "token": {
+                    "type": "string"
+                },
+                "username": {
                     "type": "string"
                 }
             }

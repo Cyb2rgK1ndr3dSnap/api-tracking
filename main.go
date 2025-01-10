@@ -1,7 +1,10 @@
 package main
 
 import (
+	"embed"
+	"html/template"
 	"log"
+	"net/http"
 	"os"
 
 	_ "github.com/Cyb2rgK1ndr3dSnap/api-tracking/docs"
@@ -12,6 +15,12 @@ import (
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
+
+//go:embed templates/*
+var htmlFiles embed.FS
+
+//go:embed static/*
+var staticFiles embed.FS
 
 // @Title Tag Service API
 // @securityDefinitions.apikey JWT
@@ -37,15 +46,49 @@ func main() {
 	// add swagger
 	r.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
+	// Cargar plantillas desde el binario
+	tmpl := template.Must(template.New("").ParseFS(htmlFiles, "templates/*.html"))
+	r.SetHTMLTemplate(tmpl)
+
+	// Servir archivos estáticos desde el binario
+	staticFileServer := http.FileServer(http.FS(staticFiles))
+
+	r.GET("/static/*filepath", func(c *gin.Context) {
+		// Remover el prefijo /static para que coincida con la estructura del sistema embed
+		filepath := c.Param("filepath")
+		c.Request.URL.Path = "static" + filepath // Agregar solo el prefijo "static"
+		staticFileServer.ServeHTTP(c.Writer, c.Request)
+	})
+
+	// Servir favicon desde el sistema embed
+	r.GET("/favicon.ico", func(c *gin.Context) {
+		favicon, err := staticFiles.ReadFile("static/favicon.ico")
+		if err != nil {
+			c.Status(http.StatusNotFound)
+			return
+		}
+		c.Data(http.StatusOK, "image/x-icon", favicon)
+	})
+
+	/*
+		r.LoadHTMLGlob("templates/*")
+
+		r.Static("/static", "./static")
+
+		r.StaticFile("/favicon.ico", "./static/favicon.ico")
+	*/
+
 	r.Use(func(c *gin.Context) {
 		c.Set("db", db)
 		c.Next()
 	})
 
-	routes.RootRoute(r)
+	routes.ViewRoutes(r)
 	routes.UserRoutes(r)
 	routes.ShippingRoutes(r)
 	routes.TransactionRoutes(r)
+	routes.BusinessRoutes(r)
+	routes.StatusRoutes(r)
 
 	log.Println("Server is running on port:", port)
 

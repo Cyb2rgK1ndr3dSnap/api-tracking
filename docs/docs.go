@@ -116,7 +116,7 @@ const docTemplate = `{
                         "JWT": []
                     }
                 ],
-                "description": "Realiza el guardado de la transacción que se quiere crear en la BD",
+                "description": "Realiza el guardado del paquete que se quiere crear en la BD y una transacción se abre",
                 "consumes": [
                     "application/json"
                 ],
@@ -124,17 +124,17 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Transaction"
+                    "Shipping"
                 ],
-                "summary": "Creación de transacción",
+                "summary": "Creación de paquete",
                 "parameters": [
                     {
-                        "description": "crea transacción",
+                        "description": "crea paquete y transacción",
                         "name": "shipping",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.CreateTransaction"
+                            "$ref": "#/definitions/models.CreateShipping"
                         }
                     }
                 ],
@@ -217,6 +217,49 @@ const docTemplate = `{
                         "description": "ESTADO DE SALDO Y PAQUETES QUE TIENE",
                         "schema": {
                             "$ref": "#/definitions/models.BalanceTransaction"
+                        }
+                    },
+                    "400": {
+                        "description": "Error en los datos proporcionados",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorMessage"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "JWT": []
+                    }
+                ],
+                "description": "Realiza el guardado de la transacción que se quiere crear en la BD",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Transaction"
+                ],
+                "summary": "Creación de transacción",
+                "parameters": [
+                    {
+                        "description": "crea transacción",
+                        "name": "shipping",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.CreateTransaction"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "mensaje de éxito",
+                        "schema": {
+                            "$ref": "#/definitions/models.SuccessMessage"
                         }
                     },
                     "400": {
@@ -336,18 +379,15 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "amount",
-                "email",
                 "expiration_date",
                 "quantity",
                 "shipping_number",
+                "username",
                 "weight"
             ],
             "properties": {
                 "amount": {
                     "type": "number"
-                },
-                "email": {
-                    "type": "string"
                 },
                 "expiration_date": {
                     "type": "string"
@@ -359,6 +399,9 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "shipping_number": {
+                    "type": "string"
+                },
+                "username": {
                     "type": "string"
                 },
                 "weight": {
@@ -400,17 +443,17 @@ const docTemplate = `{
         "models.LoginUser": {
             "type": "object",
             "required": [
-                "email",
-                "password"
+                "password",
+                "username"
             ],
             "properties": {
-                "email": {
-                    "type": "string"
-                },
                 "password": {
                     "type": "string"
                 },
                 "token": {
+                    "type": "string"
+                },
+                "username": {
                     "type": "string"
                 }
             }
@@ -490,6 +533,9 @@ const docTemplate = `{
                 "status": {
                     "type": "integer"
                 },
+                "username": {
+                    "type": "string"
+                },
                 "weight": {
                     "type": "number"
                 }
@@ -512,16 +558,10 @@ const docTemplate = `{
                 "amount": {
                     "type": "number"
                 },
-                "email": {
-                    "type": "string"
-                },
                 "expiration_date": {
                     "type": "string"
                 },
                 "id_shipping": {
-                    "type": "integer"
-                },
-                "id_user": {
                     "type": "integer"
                 },
                 "quantity": {
@@ -532,6 +572,9 @@ const docTemplate = `{
                 },
                 "status": {
                     "type": "integer"
+                },
+                "username": {
+                    "type": "string"
                 },
                 "weight": {
                     "type": "number"

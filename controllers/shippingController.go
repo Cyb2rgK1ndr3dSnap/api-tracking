@@ -1,7 +1,11 @@
 package controllers
 
 import (
+	"context"
 	"database/sql"
+	"strconv"
+	"sync"
+	"time"
 
 	"github.com/Cyb2rgK1ndr3dSnap/api-tracking/models"
 	"github.com/Cyb2rgK1ndr3dSnap/api-tracking/services"
@@ -26,13 +30,13 @@ func CreateShipping(c *gin.Context) {
 
 	err := c.ShouldBindJSON(&Body)
 	if err != nil {
-		c.JSON(400, gin.H{"message": "Please complete all the required data"})
+		c.JSON(400, gin.H{"error": "Please complete all the required data"})
 		return
 	}
 
-	u, err := services.GetUserByEmail(Body.Email, db)
+	u, err := services.GetUserByUsername(Body.Username, db)
 	if err != nil {
-		c.JSON(400, gin.H{"message": "user with that email not exists"})
+		c.JSON(400, gin.H{"error": "user with that username not exists"})
 		return
 	}
 
@@ -41,34 +45,34 @@ func CreateShipping(c *gin.Context) {
 
 	tx, err := db.Begin()
 	if err != nil {
-		c.JSON(400, gin.H{"message": "Error with server"})
+		c.JSON(400, gin.H{"error": "Error with server"})
 		return
 	}
 
 	idShipping, err := services.CreateShipping(Body, tx)
 	if err != nil {
 		tx.Rollback()
-		c.JSON(400, gin.H{"message": "Error with save data"})
+		c.JSON(400, gin.H{"error": "Error with save data"})
 		return
 	}
 
 	transaction := models.CreateTransaction{
 		IDUser:            Body.IDUser,
 		IDShipping:        idShipping,
-		IDTransactionType: 1,
+		IDTransactionType: 2,
 		Amount:            Body.Amount,
 	}
 
 	err = services.CreateTransaction(transaction, tx)
 	if err != nil {
 		tx.Rollback()
-		c.JSON(400, gin.H{"message": "Error with save data"})
+		c.JSON(400, gin.H{"error": "Error with save data"})
 		return
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		c.JSON(400, gin.H{"message": "Error with save data"})
+		c.JSON(400, gin.H{"error": "Error with save data"})
 		return
 	}
 
@@ -89,16 +93,32 @@ func CreateShipping(c *gin.Context) {
 func GetShipping(c *gin.Context) {
 	db := c.MustGet("db").(*sql.DB)
 
-	var Body models.ReadShipping
+	var Body models.ReadShippings
 
 	err := c.ShouldBindQuery(&Body)
 	if err != nil {
-		c.JSON(400, gin.H{"message": "Please fill all the required data"})
+		c.JSON(400, gin.H{"message": "Please fill all the required data" + err.Error()})
 		return
 	}
 
 	Body.IDUser = c.MustGet("userID").(int)
 	Body.IDRole = c.MustGet("roleID").(int)
+
+	var response = make(gin.H)
+
+	if Body.PageSize == 0 {
+		Body.PageSize = 10
+	}
+
+	if Body.Web && Body.PageNumber == 1 {
+		totalPages, err := services.GetShippingMaxPage(Body, db)
+		if err != nil {
+			c.JSON(400, gin.H{"error": "Not exist data matching"})
+			return
+		}
+
+		response["total_pages"] = (totalPages + Body.PageSize - 1) / Body.PageSize
+	}
 
 	rows, err := services.GetShipping(Body, db)
 	if err != nil {
@@ -122,6 +142,7 @@ func GetShipping(c *gin.Context) {
 			&shipping.LastUpdate,
 			&shipping.ExpirationDate,
 			&shipping.Email,
+			&shipping.Username,
 		)
 		if err != nil {
 			c.JSON(400, gin.H{"error": "Error with database"})
@@ -130,12 +151,12 @@ func GetShipping(c *gin.Context) {
 		shippings = append(shippings, shipping)
 	}
 
-	/*if err = rows.Err(); err != nil {
-		c.JSON(400, gin.H{"error": "Error with database"})
-		return
-	}*/
-
-	c.JSON(200, shippings)
+	if Body.Web {
+		response["data"] = shippings
+		c.JSON(200, response)
+	} else {
+		c.JSON(200, shippings)
+	}
 }
 
 // @Summary Actualización de datos de paquete
@@ -151,6 +172,7 @@ func UpdateShipping(c *gin.Context) {
 	db := c.MustGet("db").(*sql.DB)
 
 	var Body models.UpdateShipping
+	var response = make(gin.H)
 
 	err := c.ShouldBindJSON(&Body)
 	if err != nil {
@@ -158,28 +180,37 @@ func UpdateShipping(c *gin.Context) {
 		return
 	}
 
-	currentStatus, err := services.StatusShippingByID(Body.IDShipping, db)
+	if !Body.ExpirationDate.IsZero() {
+		if Body.ExpirationDate.Before(time.Now()) {
+			c.JSON(400, gin.H{"error": "The date is not correctly"})
+			return
+		}
+	}
+
+	shipping, err := services.GetShippingByID(Body.IDShipping, db)
 	if err != nil {
-		c.JSON(400, gin.H{"error": "Shipping not found"})
+		c.JSON(400, gin.H{"error": "Not exist data matching"})
 		return
 	}
 
-	if currentStatus == 1 {
-		c.JSON(400, gin.H{"error": "Cannot modify a shipping that is already closed"})
+	if shipping.Status == 1 {
+		c.JSON(400, gin.H{"error": "Cannot make that process, that shipping is already closed"})
 		return
 	}
 
-	u, err := services.GetUserByEmail(Body.Email, db)
-	if err != nil {
-		c.JSON(400, gin.H{"error": "user with that email not exists"})
-		return
+	if Body.Username != "" {
+		u, err := services.GetUserByUsername(Body.Username, db)
+		if err != nil {
+			c.JSON(400, gin.H{"error": "user with that username not exists"})
+			return
+		}
+		Body.IDUser = u.IDUser
+		response["email"] = u.Email
 	}
-
-	Body.IDUser = u.IDUser
 
 	tx, err := db.Begin()
 	if err != nil {
-		c.JSON(400, gin.H{"message": "Error with server"})
+		c.JSON(400, gin.H{"error": "Error with server"})
 		return
 	}
 
@@ -190,17 +221,35 @@ func UpdateShipping(c *gin.Context) {
 		return
 	}
 
-	transaction := models.UpdateTransaction{
-		IDUser:     Body.IDUser,
-		IDShipping: Body.IDShipping,
-		Amount:     Body.Amount,
+	if Body.Amount != 0 || Body.IDUser != 0 {
+		transaction := models.UpdateTransaction{
+			IDUser:     Body.IDUser,
+			IDShipping: Body.IDShipping,
+			Amount:     Body.Amount,
+		}
+
+		err = services.UpdateTransaction(transaction, tx)
+		if err != nil {
+			tx.Rollback()
+			c.JSON(400, gin.H{"error": "Error with update Shipping data"})
+			return
+		}
 	}
 
-	err = services.UpdateTransaction(transaction, tx)
-	if err != nil {
-		tx.Rollback()
-		c.JSON(400, gin.H{"error": "Error with update Shipping data"})
-		return
+	if Body.Status == 1 {
+		transaction := models.CreateTransaction{
+			IDUser:            shipping.IDUser,
+			IDShipping:        shipping.IDShipping,
+			IDTransactionType: 1,
+			Amount:            (shipping.Amount * -1),
+		}
+
+		err = services.CreateTransaction(transaction, tx)
+		if err != nil {
+			tx.Rollback()
+			c.JSON(400, gin.H{"error": "Error with save data"})
+			return
+		}
 	}
 
 	err = tx.Commit()
@@ -210,7 +259,56 @@ func UpdateShipping(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, gin.H{"message": "Shipping updated successfully"})
+	if Body.Status == 1 || Body.Status == 3 {
+		// Notification
+		message := "Your shipping " + shipping.ShippingNumber
+		if Body.Status == 1 {
+			message += " has been closed"
+		} else if Body.Status == 3 {
+			message += " is awaiting pickup"
+		}
+
+		data := map[string]string{
+			"shippingNumber": shipping.ShippingNumber,
+			"idUser":         strconv.Itoa(shipping.IDUser),
+			"title":          "Shipping closed",
+			"body":           message,
+		}
+		// End notification
+
+		// Send notification to user device's
+		devices, err := services.ReadDevices(shipping.IDUser, db)
+		if err != nil {
+			c.JSON(400, gin.H{"error": "Error with database"})
+			return
+		}
+
+		// Si es difente de 0 entrar
+		if len(devices) > 0 {
+			var wg sync.WaitGroup
+			var notificationErr error
+
+			ctx := context.Background()
+
+			wg.Add(1)
+			go func(devices []string) {
+				defer wg.Done()
+				notificationErr = utils.SendNotification(devices, ctx, data)
+			}(devices)
+
+			wg.Wait()
+
+			if notificationErr != nil {
+				c.JSON(400, gin.H{"error": "Error with push notification"})
+				return
+			}
+		}
+		// End notification
+	}
+
+	response["message"] = "Shipping updated successfully"
+
+	c.JSON(200, response)
 }
 
 // @Summary Cerrar paquete y creación de transacción
@@ -227,9 +325,9 @@ func CloseShipping(c *gin.Context) {
 
 	var Body models.CloseShipping
 
-	err := c.ShouldBindQuery(&Body)
+	err := c.ShouldBindJSON(&Body)
 	if err != nil {
-		c.JSON(400, gin.H{"error": "Please fill all the required data"})
+		c.JSON(400, gin.H{"error": "Please fill all the required data" + err.Error()})
 		return
 	}
 
@@ -247,7 +345,7 @@ func CloseShipping(c *gin.Context) {
 	transaction := models.CreateTransaction{
 		IDUser:            shipping.IDUser,
 		IDShipping:        shipping.IDShipping,
-		IDTransactionType: 2,
+		IDTransactionType: 1,
 		Amount:            (shipping.Amount * -1),
 	}
 
@@ -283,24 +381,51 @@ func CloseShipping(c *gin.Context) {
 		return
 	}
 
-	rows, err := services.ReadDevices(shipping.IDUser, db)
-	defer rows.Close()
-	var devices = make([]string, 0, 10)
-	for rows.Next() {
-		var token string
-		err := rows.Scan(
-			&token,
-		)
-		if err != nil {
-			c.JSON(400, gin.H{"error": "Error with database"})
-			return
-		}
-		devices = append(devices, token)
+	devices, err := services.ReadDevices(shipping.IDUser, db)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "Error with push notification: " + err.Error()})
+		return
 	}
 
+	var wg sync.WaitGroup
+	var notificationErr error
+
+	ctx := context.Background()
+
+	wg.Add(1)
 	go func(devices []string) {
-		utils.SendPushNotification(devices, "Shipping closed", "Your shipping has been closed")
+		defer wg.Done()
+		notificationErr = utils.SendNotification(devices, ctx, nil)
 	}(devices)
 
+	wg.Wait()
+
+	if notificationErr != nil {
+		c.JSON(400, gin.H{"error": "Error with push notification" + notificationErr.Error()})
+		return
+	}
+
 	c.JSON(200, gin.H{"message": "Shipping Closed successfully"})
+}
+
+func GetShippingsTotal(c *gin.Context) {
+	db := c.MustGet("db").(*sql.DB)
+
+	var Body models.ReadShipping
+
+	err := c.ShouldBindJSON(&Body)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "Please fill all the required data"})
+		return
+	}
+
+	Body.IDRole = c.MustGet("roleID").(int)
+
+	total, err := services.GetShippingTotal(db, Body)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "Error with server" + err.Error()})
+		return
+	}
+
+	c.JSON(200, gin.H{"total": total})
 }

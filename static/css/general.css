@@ -1,0 +1,211 @@
+:root {
+    --primary-color: #ffd700;
+    --background-color: #000000;
+    --text-color: #ffffff;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background: #262626;
+    font-family: Arial, sans-serif;
+    display: flex;
+}
+
+.layout-wrapper {
+    display: flex;
+    flex: 1;
+}
+
+i {
+    font-style: normal;
+}
+
+.sidebar {
+    width: 6vh;
+    height: 100%;
+    overflow-y: auto;
+    background-color: #121212;
+    position: relative;
+    left: 0;
+    top: 0;
+    color: var(--text-color);
+    transition: width 0.3s ease;
+}
+
+.sidebar.collapsed .sidebar-header h2 {
+    display: none; /* Oculta el texto "Indaboxs" */
+}
+
+.sidebar.collapsed .sidebar-header span {
+    display: none;
+}
+
+.sidebar.collapsed .nav-list {
+    display: none;
+}
+
+.sidebar.collapsed .nav-list .nav-item .nav-link {
+    justify-content: center;
+    text-align: center;
+}
+
+.sidebar.collapsed .submenu {
+    display: none; /* Oculta submenús */
+}
+
+.sidebar.active {
+    width: 25vh;
+}
+
+.sidebar-header {
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.sidebar-header h2 {
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.nav-list {
+    list-style: none;
+    padding: 20px 0;
+}
+
+.nav-item {
+    position: relative;
+}
+
+.nav-link {
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: var(--text-color);
+    transition: background-color 0.3s;
+}
+
+.nav-link:hover {
+    background-color: rgba(255, 215, 0, 0.1);
+}
+
+.nav-link i {
+    margin-right: 10px;
+}
+
+.submenu {
+    list-style: none;
+    background-color: rgba(255, 255, 255, 0.05);
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+.submenu-link {
+    padding: 12px 30px;
+    display: block;
+    text-decoration: none;
+    color: var(--text-color);
+    transition: background-color 0.3s;
+}
+
+.submenu-link:hover {
+    background-color: rgba(255, 215, 0, 0.1);
+}
+
+.nav-item.active .submenu {
+    max-height: 500px;
+}
+
+.nav-item.active .nav-link {
+    background-color: var(--primary-color);
+    color: var(--background-color);
+}
+
+.mobile-toggle {
+    display: none;
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: var(--background-color);
+    color: var(--primary-color);
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    z-index: 1000;
+    border-radius: 5px;
+}
+
+.desktop-toggle {
+    background-color: transparent;
+    color: var(--primary-color);
+    border: none;
+    cursor: pointer;
+    font-size: 20px;
+}
+
+.content {
+    margin-left: 5vh;
+    padding: 20px;
+    transition: margin-left 0.3s ease;
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        display: inline-table;
+        width: 0vw;
+        z-index: 100;
+    }
+
+    .sidebar-header {
+        padding: 0px;
+    }
+
+    .sidebar.active {
+        padding: 20px;
+        width: 0vw;
+        height: 100vh;
+    }
+
+    .mobile-toggle {
+        display: block;
+    }
+
+    .desktop-toggle {
+        display: none;
+    }
+
+    .content {
+        margin-top: 5vh;
+        margin-left: 0vh;
+    }
+
+    .nav-item {
+        position: relative;
+    }
+
+    .submenu {
+        position: relative;
+        width: 100%;
+        background-color: rgba(0, 0, 0, 0.2);
+    }
+
+    .content {
+        position: absolute;
+    }
+}

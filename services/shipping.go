@@ -31,6 +31,12 @@ func UpdateShipping(updateS models.UpdateShipping, tx *sql.Tx) error {
 		counter++
 	}
 
+	if updateS.Status != 0 {
+		queryParts = append(queryParts, "status = $"+strconv.Itoa(counter))
+		args = append(args, updateS.Status)
+		counter++
+	}
+
 	if updateS.Weight != 0 {
 		queryParts = append(queryParts, "weight = $"+strconv.Itoa(counter))
 		args = append(args, updateS.Weight)
@@ -49,7 +55,7 @@ func UpdateShipping(updateS models.UpdateShipping, tx *sql.Tx) error {
 		counter++
 	}
 
-	if updateS.ExpirationDate.String() != "" {
+	if !updateS.ExpirationDate.IsZero() {
 		queryParts = append(queryParts, "expiration_date = $"+strconv.Itoa(counter))
 		args = append(args, updateS.ExpirationDate)
 		counter++
@@ -73,15 +79,16 @@ func UpdateShipping(updateS models.UpdateShipping, tx *sql.Tx) error {
 	return nil
 }
 
-func GetShipping(readS models.ReadShipping, db *sql.DB) (*sql.Rows, error) {
-	query := `SELECT s.id_shipping, s.id_user, s.shipping_number, s.weight, s.amount, s.quantity, s.status, s.last_update, s.expiration_date , u.email 
+func GetShipping(readS models.ReadShippings, db *sql.DB) (*sql.Rows, error) {
+	query := `SELECT s.id_shipping, s.id_user, s.shipping_number, s.weight, s.amount, s.quantity, s.status, s.last_update, s.expiration_date, u.email, u.username
 			  FROM shippings s
 			  JOIN users u ON s.id_user = u.id_user 
-			  WHERE 1=1;`
+			  WHERE 1=1`
 
 	var args []interface{}
-	argIndex := 1 // Contador dinámico para los índices de los parámetros
+	argIndex := 1
 
+	// Aplicar filtros
 	if readS.Email != "" && readS.IDRole == 1 {
 		query += fmt.Sprintf(" AND u.email = $%d", argIndex)
 		args = append(args, readS.Email)
@@ -90,15 +97,34 @@ func GetShipping(readS models.ReadShipping, db *sql.DB) (*sql.Rows, error) {
 		query += fmt.Sprintf(" AND s.shipping_number = $%d", argIndex)
 		args = append(args, readS.ShippingNumber)
 		argIndex++
-	} else if readS.IDShipping != 0 {
-		query += fmt.Sprintf(" AND s.id_shipping = $%d", argIndex)
-		args = append(args, readS.IDShipping)
-		argIndex++
-	} else {
+	} else if !readS.Web {
 		query += fmt.Sprintf(" AND s.id_user = $%d", argIndex)
 		args = append(args, readS.IDUser)
 		argIndex++
 	}
+	if readS.Status != 0 {
+		query += fmt.Sprintf(" AND s.status = $%d", argIndex)
+		args = append(args, readS.Status)
+		argIndex++
+	}
+	if readS.Cursor != 0 {
+		query += fmt.Sprintf(" AND s.id_shipping < $%d", argIndex)
+		args = append(args, readS.Cursor)
+		argIndex++
+	}
+	if readS.PageSize != 0 {
+		// Ordenar y limitar los resultados
+		query += fmt.Sprintf(" ORDER BY (CASE WHEN s.status = 1 THEN 1 ELSE 0 END) ASC, s.id_shipping DESC LIMIT $%d", argIndex)
+		args = append(args, readS.PageSize)
+		argIndex++
+	}
+	if readS.PageNumber != 0 {
+		offSet := ((readS.PageNumber - 1) * readS.PageSize)
+		query += fmt.Sprintf(" OFFSET $%d", argIndex)
+		args = append(args, offSet)
+		argIndex++
+	}
+
 	rows, err := db.Query(query, args...)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -109,19 +135,54 @@ func GetShipping(readS models.ReadShipping, db *sql.DB) (*sql.Rows, error) {
 	return rows, nil
 }
 
+func GetShippingMaxPage(readS models.ReadShippings, db *sql.DB) (int, error) {
+	var total int
+	query := `SELECT COUNT(*) AS total
+			  FROM shippings s
+			  JOIN users u ON s.id_user = u.id_user 
+			  WHERE 1=1`
+
+	var args []interface{}
+	argIndex := 1
+	// Aplicar filtros
+	if readS.Email != "" && readS.IDRole == 1 {
+		query += fmt.Sprintf(" AND u.email = $%d", argIndex)
+		args = append(args, readS.Email)
+		argIndex++
+	} else if readS.ShippingNumber != "" {
+		query += fmt.Sprintf(" AND s.shipping_number = $%d", argIndex)
+		args = append(args, readS.ShippingNumber)
+		argIndex++
+	} else if !readS.Web {
+		query += fmt.Sprintf(" AND s.id_user = $%d", argIndex)
+		args = append(args, readS.IDUser)
+		argIndex++
+	}
+	if readS.Status != 0 {
+		query += fmt.Sprintf(" AND s.status = $%d", argIndex)
+		args = append(args, readS.Status)
+		argIndex++
+	}
+
+	err := db.QueryRow(query, args...).Scan(&total)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return 0, nil
+		}
+		return 0, err
+	}
+
+	return total, nil
+}
+
 func GetShippingByID(idShipping int, db *sql.DB) (*models.Shipping, error) {
 	u := new(models.Shipping)
-	err := db.QueryRow("SELECT * FROM Shippings WHERE id_shipping = $1", idShipping).Scan(
+	err := db.QueryRow("SELECT id_shipping, id_user, shipping_number, amount, status FROM Shippings WHERE id_shipping = $1", idShipping).Scan(
 		&u.IDShipping,
 		&u.IDUser,
 		&u.ShippingNumber,
-		&u.Weight,
 		&u.Amount,
-		&u.Quantity,
 		&u.Status,
-		&u.Created_date,
-		&u.LastUpdate,
-		&u.ExpirationDate,
 	)
 	if err != nil {
 		return nil, err
@@ -146,4 +207,26 @@ func QuantityShipping(quantityShipping models.QuantityShipping, db *sql.DB) (int
 		return 0, err
 	}
 	return quantity, nil
+}
+
+func GetShippingTotal(db *sql.DB, readU models.ReadShipping) (int, error) {
+	var total int
+
+	query := `SELECT COUNT(*) AS total FROM shippings WHERE 1 = 1 `
+
+	var args []interface{}
+	argIndex := 1
+
+	if readU.ShippingStatus != 0 && readU.IDRole == 1 {
+		query += fmt.Sprintf(" AND status = $%d", argIndex)
+		args = append(args, readU.ShippingStatus)
+		argIndex++
+	}
+
+	err := db.QueryRow(query, args...).Scan(&total)
+	if err != nil {
+		return 0, err
+	}
+
+	return total, nil
 }

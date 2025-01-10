@@ -17,7 +17,7 @@ import (
 // @Param shipping body models.CreateTransaction true "crea transacción"
 // @Success 200 {object} models.SuccessMessage "mensaje de éxito"
 // @Failure 400 {object} models.ErrorMessage "Error en los datos proporcionados"
-// @Router /shipping [post]
+// @Router /transaction [post]
 func CreateTransaction(c *gin.Context) {
 	db := c.MustGet("db").(*sql.DB)
 

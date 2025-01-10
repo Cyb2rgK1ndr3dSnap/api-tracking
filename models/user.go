@@ -31,7 +31,13 @@ type RegisterUser struct {
 }
 
 type LoginUser struct {
-	Email    string `json:"email" binding:"required"`
+	Email    string `json:"username" binding:"required"`
 	Password string `json:"password" binding:"required"`
 	Token    string `json:"token,omitempty"`
+}
+
+type ReadUser struct {
+	IDUser   int `form:"-"`
+	IDRole   int `form:"-"`
+	UserType int `json:"user_type,omitempty"`
 }

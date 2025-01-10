@@ -10,8 +10,8 @@ import (
 	"os"
 	"strconv"
 
-	firebase "firebase.google.com/go"
-	"firebase.google.com/go/messaging"
+	firebase "firebase.google.com/go/v4"
+	"firebase.google.com/go/v4/messaging"
 	"google.golang.org/api/option"
 )
 
@@ -90,35 +90,44 @@ func GetDecodedFireBaseKey() ([]byte, error) {
 	return decodedKey, nil
 }
 
-func SendPushNotification(token []string, title, body string) error {
+func SendNotification(tokens []string, ctx context.Context, data map[string]string) error {
 	decodedKey, _ := GetDecodedFireBaseKey()
 
 	opts := []option.ClientOption{option.WithCredentialsJSON(decodedKey)}
 
-	app, err := firebase.NewApp(context.Background(), nil, opts...)
+	app, err := firebase.NewApp(ctx, nil, opts...)
 
 	if err != nil {
 		return err
 	}
 
-	fcmClient, err := app.Messaging(context.Background())
+	fcmClient, err := app.Messaging(ctx)
 
 	if err != nil {
 		return err
 	}
 
-	_, err = fcmClient.SendMulticast(context.Background(), &messaging.MulticastMessage{
+	if len(tokens) == 1 {
+		_, err = fcmClient.Send(ctx, &messaging.Message{
+			/*Notification: &messaging.Notification{
+				Title: title,
+				Body:  body,
+			},*/
+			Data:  data,
+			Token: tokens[0],
+		})
+		return err
+	}
 
-		Notification: &messaging.Notification{
+	// Si hay múltiples tokens, usar SendMulticast()
+	_, err = fcmClient.SendEachForMulticast(ctx, &messaging.MulticastMessage{
+		/*Notification: &messaging.Notification{
 			Title: title,
 			Body:  body,
-		},
-		Tokens: token,
+		},*/
+		Data:   data,
+		Tokens: tokens,
 	})
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }

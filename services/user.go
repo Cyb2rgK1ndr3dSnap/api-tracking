@@ -2,6 +2,7 @@ package services
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/Cyb2rgK1ndr3dSnap/api-tracking/models"
 )
@@ -30,9 +31,6 @@ func GetUserByUsername(username string, db *sql.DB) (*models.User, error) {
 		&u.UserName,
 	)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
-		}
 		return nil, err
 	}
 	return u, nil
@@ -53,9 +51,9 @@ func GetUserByEmail(email string, db *sql.DB) (*models.User, error) {
 		&u.UserName,
 	)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		/*if err == sql.ErrNoRows {
 			return nil, nil
-		}
+		}*/
 		return nil, err
 	}
 	return u, nil
@@ -84,4 +82,26 @@ func GetUserByID(id int, db *sql.DB) (*models.User, error) {
 	}
 
 	return u, nil
+}
+
+func GetUserTotal(db *sql.DB, readU models.ReadUser) (int, error) {
+	var total int
+
+	query := `SELECT COUNT(*) AS total FROM users WHERE 1 = 1 `
+
+	var args []interface{}
+	argIndex := 1
+
+	if readU.UserType != 0 && readU.IDRole == 1 {
+		query += fmt.Sprintf(" AND id_role = $%d", argIndex)
+		args = append(args, readU.UserType)
+		argIndex++
+	}
+
+	err := db.QueryRow(query, args...).Scan(&total)
+	if err != nil {
+		return 0, err
+	}
+
+	return total, nil
 }

@@ -17,8 +17,6 @@ definitions:
     properties:
       amount:
         type: number
-      email:
-        type: string
       expiration_date:
         type: string
       id_user:
@@ -27,14 +25,16 @@ definitions:
         type: integer
       shipping_number:
         type: string
+      username:
+        type: string
       weight:
         type: number
     required:
     - amount
-    - email
     - expiration_date
     - quantity
     - shipping_number
+    - username
     - weight
     type: object
   models.CreateTransaction:
@@ -60,15 +60,15 @@ definitions:
     type: object
   models.LoginUser:
     properties:
-      email:
-        type: string
       password:
         type: string
       token:
         type: string
+      username:
+        type: string
     required:
-    - email
     - password
+    - username
     type: object
   models.RegisterUser:
     properties:
@@ -122,6 +122,8 @@ definitions:
         type: string
       status:
         type: integer
+      username:
+        type: string
       weight:
         type: number
     type: object
@@ -134,13 +136,9 @@ definitions:
     properties:
       amount:
         type: number
-      email:
-        type: string
       expiration_date:
         type: string
       id_shipping:
-        type: integer
-      id_user:
         type: integer
       quantity:
         type: integer
@@ -148,6 +146,8 @@ definitions:
         type: string
       status:
         type: integer
+      username:
+        type: string
       weight:
         type: number
     required:
@@ -220,15 +220,15 @@ paths:
     post:
       consumes:
       - application/json
-      description: Realiza el guardado de la transacción que se quiere crear en la
-        BD
+      description: Realiza el guardado del paquete que se quiere crear en la BD y
+        una transacción se abre
       parameters:
-      - description: crea transacción
+      - description: crea paquete y transacción
         in: body
         name: shipping
         required: true
         schema:
-          $ref: '#/definitions/models.CreateTransaction'
+          $ref: '#/definitions/models.CreateShipping'
       produces:
       - application/json
       responses:
@@ -242,9 +242,9 @@ paths:
             $ref: '#/definitions/models.ErrorMessage'
       security:
       - JWT: []
-      summary: Creación de transacción
+      summary: Creación de paquete
       tags:
-      - Transaction
+      - Shipping
     put:
       consumes:
       - application/json
@@ -314,6 +314,34 @@ paths:
       security:
       - JWT: []
       summary: Estado de cuenta de usuario
+      tags:
+      - Transaction
+    post:
+      consumes:
+      - application/json
+      description: Realiza el guardado de la transacción que se quiere crear en la
+        BD
+      parameters:
+      - description: crea transacción
+        in: body
+        name: shipping
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateTransaction'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: mensaje de éxito
+          schema:
+            $ref: '#/definitions/models.SuccessMessage'
+        "400":
+          description: Error en los datos proporcionados
+          schema:
+            $ref: '#/definitions/models.ErrorMessage'
+      security:
+      - JWT: []
+      summary: Creación de transacción
       tags:
       - Transaction
   /user:

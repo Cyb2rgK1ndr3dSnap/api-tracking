@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shipping Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>
+    <style>
+        :root {
+    --primary-color: #ffd700;
+    --secondary-color: #000000;
+    --background-color: #ffffff;
+    --text-color: #333333;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
+.dashboard {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: 250px;
+    background-color: var(--secondary-color);
+    color: var(--background-color);
+    padding: 20px;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    font-size: 24px;
+    margin-bottom: 30px;
+}
+
+.logo i {
+    margin-right: 10px;
+    color: var(--primary-color);
+}
+
+nav ul {
+    list-style-type: none;
+}
+
+nav ul li {
+    margin-bottom: 15px;
+}
+
+nav ul li a {
+    color: var(--background-color);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+}
+
+nav ul li a i {
+    margin-right: 10px;
+}
+
+nav ul li.active a {
+    color: var(--primary-color);
+}
+
+.content {
+    flex-grow: 1;
+    padding: 20px;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+}
+
+.user-info span {
+    margin-right: 10px;
+}
+
+.user-info img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+}
+
+.dashboard-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.card {
+    background-color: var(--background-color);
+    border: 1px solid #e0e0e0;
+    border-radius: 5px;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+input, select, button {
+    margin-bottom: 10px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+}
+
+button {
+    background-color: var(--primary-color);
+    color: var(--secondary-color);
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+button:hover {
+    background-color: #e6c200;
+}
+
+@media (max-width: 768px) {
+    .dashboard {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        display: none;
+    }
+
+    .mobile-spinner {
+        display: flex;
+    }
+
+    .content {
+        padding: 10px;
+    }
+
+    header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .user-info {
+        margin-top: 10px;
+    }
+}
+
+.mobile-spinner {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid var(--background-color);
+    border-top: 5px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+    </style>
+</head>
+<body>
+    <div class="mobile-spinner">
+        <div class="spinner"></div>
+    </div>
+    <div class="dashboard">
+        <aside class="sidebar" id="sidebar">
+            <div class="logo">
+                <i class="fas fa-shipping-fast"></i>
+                <span>ShipCo</span>
+            </div>
+            <nav>
+                <ul>
+                    <li class="active"><a href="#"><i class="fas fa-home"></i> Dashboard</a></li>
+                    <li><a href="#"><i class="fas fa-box"></i> Shipments</a></li>
+                    <li><a href="#"><i class="fas fa-users"></i> Users</a></li>
+                    <li><a href="#"><i class="fas fa-cog"></i> Settings</a></li>
+                </ul>
+            </nav>
+        </aside>
+        <main class="content">
+            <header>
+                <h1>Dashboard</h1>
+                <div class="user-info">
+                    <span>John Doe</span>
+                    <img src="https://via.placeholder.com/40" alt="User Avatar">
+                </div>
+            </header>
+            <section class="dashboard-content">
+                <div class="card">
+                    <h2>Create Shipping</h2>
+                    <form id="shipping-form">
+                        <input type="text" placeholder="Recipient Name" required>
+                        <input type="text" placeholder="Destination Address" required>
+                        <input type="text" placeholder="Package Weight (kg)" required>
+                        <button type="submit">Create Shipping</button>
+                    </form>
+                </div>
+                <div class="card">
+                    <h2>Update Users/Admins</h2>
+                    <form id="user-form">
+                        <input type="text" placeholder="User Name" required>
+                        <select required>
+                            <option value="">Select Role</option>
+                            <option value="user">User</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                        <button type="submit">Update User</button>
+                    </form>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+    const shippingForm = document.getElementById('shipping-form');
+    const userForm = document.getElementById('user-form');
+    const sidebar = document.getElementById('sidebar');
+    const mobileSpinner = document.querySelector('.mobile-spinner');
+
+    shippingForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        alert('Shipping created successfully!');
+        shippingForm.reset();
+    });
+
+    userForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        alert('User updated successfully!');
+        userForm.reset();
+    });
+
+    // Add active class to current nav item
+    const navItems = document.querySelectorAll('nav ul li');
+    navItems.forEach(item => {
+        item.addEventListener('click', function() {
+            navItems.forEach(i => i.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+
+    // Handle mobile spinner
+    function handleMobileSpinner() {
+        if (window.innerWidth <= 768) {
+            sidebar.style.display = 'none';
+            mobileSpinner.style.display = 'flex';
+            setTimeout(() => {
+                mobileSpinner.style.display = 'none';
+                sidebar.style.display = 'block';
+            }, 2000); // Show spinner for 2 seconds
+        } else {
+            sidebar.style.display = 'block';
+            mobileSpinner.style.display = 'none';
+        }
+    }
+
+    // Initial check
+    handleMobileSpinner();
+
+    // Check on resize
+    window.addEventListener('resize', handleMobileSpinner);
+});
+</script>

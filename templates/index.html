@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sidebar with Toggle</title>
+    <link rel="stylesheet" href="static/css/general.css">
+    <link rel="stylesheet" href="static/css/index.css">
+    {{ template "icons.html" . }}
+</head>
+<body>
+    {{ template "sidebar.html" . }}
+    <div class="content sidebar-active" id="content">
+        <h1>Dashboard Content</h1>
+        <p>Welcome to the shipping dashboard!</p>
+        <section class="dashboard-content">
+            <div class="card">
+                <h2>Total Users</h2>
+                <p><strong>Active Users:</strong> 120</p>
+                <p><strong>Admins:</strong> 15</p>
+            </div>
+            <div class="card">
+                <h2>Database Statistics</h2>
+                <p><strong>Total Records:</strong> 10,250</p>
+                <p><strong>Last Update:</strong> 2025-01-01</p>
+            </div>
+            <div class="card">
+                <h2>Shipping Statistics</h2>
+                <p><strong>Shippings Created Today:</strong> 45</p>
+                <p><strong>Total Shippings:</strong> 5,210</p>
+            </div>
+            <div class="card">
+                <h2>System Status</h2>
+                <p><strong>Online:</strong> Yes</p>
+                <p><strong>Last Downtime:</strong> 2024-12-31</p>
+            </div>
+            <div class="card">
+                <h2>API Calls</h2>
+                <p><strong>Today:</strong> 15,230</p>
+                <p><strong>Total:</strong> 2,345,120</p>
+            </div>
+        </section>
+    </div>
+    <script src="static/js/general.js"></script>
+    <script src="static/js/index.js"></script>
+</body>
+</html>

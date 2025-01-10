@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sidebar with Toggle</title>
+    <link rel="stylesheet" href="static/css/general.css">
+    <link rel="stylesheet" href="static/css/track.css">
+    {{ template "icons.html" . }}
+</head>
+<body>
+    <div class="layout-wrapper">
+    {{ template "sidebar.html" . }}
+    <div class="content sidebar-active" id="content">
+        <h3 style="color: white;">Inicio/ Paquetes</h3>
+        <div class="main-content">
+            <div>
+                <div class="header-details">
+                    <div class="message" id="message">
+                    </div>
+                    <div class="button-container">
+                        <button id="new-button" class="new-button">Nuevo</button>
+                    </div>
+                </div>
+
+                <div class="header-actions">
+                    <div class="editable-input">
+                        <span class="material-symbols-outlined">search</span>
+                        <input id="search-filter" class="search-input" type="text" placeholder="Buscar...">
+                    </div>
+                    <div class="table-filter">
+                        <select id="page-size">
+                            <option value="10">10</option>
+                            <option value="20">20</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                        <select id="status-filter">
+                            <option value="">-🔨 Estado-</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <div class="table-header">
+                        <div class="column">Código de envio</div>
+                        <div class="column">Username</div>
+                        <div class="column">Email</div>
+                        <div class="column">Estado</div>
+                        <div class="column">Fecha de expiración</div>
+                    </div>
+                    
+                    <div id="spinner" class="spinner-overlay" style="display: none;">
+                        <div class="spinner"></div>
+                    </div>
+
+                    <div id="table-rows"></div>
+
+                    <div class="table-footer">
+                        <button class="pagination-btn">&lt;</button>
+                        <input class="page-input" value="1" min="1"/>/
+                        <div id="page-limit"></div>
+                        <button class="pagination-btn">&gt;</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="detail-card" class="detail-card hidden" style="color: white;">
+                <button id="close-card" class="close-button">
+                    <h3 style="color: white">Detalles del Envío</h3>
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+                
+                <input id="detail-id" class="editable-input hidden" style="display: none;" value="" readonly/>
+                <div class="detail-item">
+                    <label for="detail-shipping-number"><strong>Código de pedido:</strong></label>
+                    <input id="detail-shipping-number" class="editable-input" type="text" value="" />
+                </div>
+            
+                <div class="detail-item">
+                    <label for="detail-username"><strong>Username:</strong></label>
+                    <input id="detail-username" class="editable-input" value="" />
+                </div>
+
+                <div class="detail-item-quantity">
+                    <label for="detail-quantity"><strong>Cajas:</strong></label>
+                    <input id="detail-quantity" class="editable-input" placeholder="0000" step="1" type="number"/>
+                </div>
+
+                <div class="detail-item-quantity">
+                    <label for="detail-weight"><strong>Peso lb's:</strong></label>
+                    <input id="detail-weight" class="editable-input" placeholder="0000.00" step="any" type="number"/>
+                </div>
+
+                <div class="detail-item-quantity">
+                    <label for="detail-amount"><strong>Costo:</strong></label>
+                    <input id="detail-amount" class="editable-input" placeholder="0000.00" step="any" type="number"/>
+                </div>
+
+                <div id="detail-item-edit">
+                    <div class="detail-item">
+                        <label for="detail-status"><strong>Estado:</strong></label>
+                        <select id="detail-status" class="editable-input">
+                            <option value="">-🔨 Estado-</option>
+                        </select>
+                    </div>
+
+                    <div class="detail-item">
+                        <label for="detail-email"><strong>Email:</strong></label>
+                        <input id="detail-email" class="editable-input" type="email" value="" readonly/>
+                    </div>
+                
+                    <div class="detail-item">
+                        <label for="detail-updated"><strong>Fecha de creación:</strong></label>
+                        <input id="detail-updated" class="editable-input" type="date" value="" readonly/>
+                    </div>
+                </div>
+            
+                <div class="detail-item">
+                    <label for="detail-expiration"><strong>Fecha de expiración:</strong></label>
+                    <input id="detail-expiration" class="editable-input" type="date" value="" />
+                </div>
+
+                <div id="detail-buttons" class="detail-buttons">
+                    <button id="toggle-close" class="edit-button">Cerrar</button>
+                    <button id="toggle-edit" class="edit-button">Editar</button>
+                </div>
+
+                <button id="toggle-create" class="create-button hidden">Crear</button>
+            </div>
+        </div>
+    </div>
+    </div>
+    <script src="static/js/general.js"></script>
+    <script src="static/js/track.js"></script>
+</body>
+</html>

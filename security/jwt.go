@@ -1,8 +1,8 @@
 package security
 
 import (
+	"net/http"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/Cyb2rgK1ndr3dSnap/api-tracking/models"
@@ -11,17 +11,13 @@ import (
 )
 
 type CustomClaims struct {
-	UserID int `json:"userID"`
-	RoleID int `json:"roleID"`
+	UserID      int    `json:"userID"`
+	RoleID      int    `json:"roleID"`
+	TokenDevice string `json:"tokenDevice"`
 	jwt.RegisteredClaims
 }
 
-func CreateJWT(user models.User) (string, error) {
-	expirationSeconds, err := strconv.Atoi(os.Getenv("JWT_EXPIRATION_IN_SECONDS"))
-	if err != nil {
-		expirationSeconds = 3600 // 1 hora por defecto
-	}
-
+func CreateJWT(user models.User, TokenDevice string, expirationSeconds int) (string, error) {
 	expiration := time.Second * time.Duration(expirationSeconds)
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
@@ -33,6 +29,7 @@ func CreateJWT(user models.User) (string, error) {
 		"phonenumber": user.PhoneNumber,
 		"cedula":      user.CC,
 		"roleID":      user.IDRole,
+		"tokenDevice": TokenDevice,
 		"exp":         time.Now().Add(expiration).Unix(),
 	})
 
@@ -48,7 +45,18 @@ func CreateJWT(user models.User) (string, error) {
 
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		var err error
 		tokenString := c.GetHeader("Authorization")
+
+		if tokenString == "" {
+			tokenString, err = c.Cookie("jwt_token")
+
+			if err != nil {
+				c.Redirect(http.StatusFound, "/")
+				c.Abort()
+				return
+			}
+		}
 
 		claims := &CustomClaims{}
 
@@ -64,6 +72,7 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		c.Set("userID", claims.UserID)
 		c.Set("roleID", claims.RoleID)
+		c.Set("tokenDevice", claims.TokenDevice)
 
 		c.Next()
 	}

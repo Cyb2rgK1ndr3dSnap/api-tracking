@@ -12,6 +12,7 @@ type Shipping struct {
 	Amount         float64   `json:"amount,omitempty"`
 	Quantity       int       `json:"quantity,omitempty"`
 	Status         int       `json:"status,omitempty"`
+	Debt           float64   `json:"debt,omitempty"`
 	Created_date   time.Time `json:"created_date,omitempty"`
 	LastUpdate     time.Time `json:"last_update,omitempty"`
 	ExpirationDate time.Time `json:"expiration_date,omitempty"`

@@ -132,6 +132,26 @@ func LogoutUser(c *gin.Context) {
 	services.DeleteDevice(token, db)
 }
 
+func GetUsers(c *gin.Context) {
+	db := c.MustGet("db").(*sql.DB)
+
+	var Body models.ReadUser
+
+	err := c.ShouldBindQuery(&Body)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "Please fill all the required data"})
+		return
+	}
+
+	users, err := services.GetUsers(Body, db)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "Error with server" + err.Error()})
+		return
+	}
+
+	c.JSON(200, users)
+}
+
 func GetUsersTotal(c *gin.Context) {
 	db := c.MustGet("db").(*sql.DB)
 
@@ -145,9 +165,9 @@ func GetUsersTotal(c *gin.Context) {
 
 	Body.IDRole = c.MustGet("roleID").(int)
 
-	total, err := services.GetUserTotal(db, Body)
+	total, err := services.GetUserTotal(Body, db)
 	if err != nil {
-		c.JSON(400, gin.H{"error": "Error with server" + err.Error()})
+		c.JSON(400, gin.H{"error": "Error with server"})
 		return
 	}
 

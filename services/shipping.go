@@ -80,9 +80,13 @@ func UpdateShipping(updateS models.UpdateShipping, tx *sql.Tx) error {
 }
 
 func GetShipping(readS models.ReadShippings, db *sql.DB) (*sql.Rows, error) {
-	query := `SELECT s.id_shipping, s.id_user, s.shipping_number, s.weight, s.amount, s.quantity, s.status, s.last_update, s.expiration_date, u.email, u.username
+	query := `SELECT s.id_shipping, s.id_user, s.shipping_number, s.weight, s.amount, 
+				s.quantity, s.status, s.last_update, s.expiration_date, u.email, 
+				u.username,COALESCE(SUM(t.transaction_amount), 0) AS debt
 			  FROM shippings s
-			  JOIN users u ON s.id_user = u.id_user 
+			  JOIN users u ON s.id_user = u.id_user
+			  LEFT JOIN transactions t ON s.id_shipping = t.id_shipping 
+			  AND t.id_transaction_type = 3
 			  WHERE 1=1`
 
 	var args []interface{}
@@ -114,7 +118,9 @@ func GetShipping(readS models.ReadShippings, db *sql.DB) (*sql.Rows, error) {
 	}
 	if readS.PageSize != 0 {
 		// Ordenar y limitar los resultados
-		query += fmt.Sprintf(" ORDER BY (CASE WHEN s.status = 1 THEN 1 ELSE 0 END) ASC, s.id_shipping DESC LIMIT $%d", argIndex)
+		query += fmt.Sprintf(` GROUP BY s.id_shipping, s.id_user, s.shipping_number, s.weight, s.amount, 
+								s.quantity, s.status, s.last_update, s.expiration_date, u.email, 
+								u.username ORDER BY (CASE WHEN s.status = 1 THEN 1 ELSE 0 END) ASC, s.id_shipping DESC LIMIT $%d`, argIndex)
 		args = append(args, readS.PageSize)
 		argIndex++
 	}
@@ -176,18 +182,24 @@ func GetShippingMaxPage(readS models.ReadShippings, db *sql.DB) (int, error) {
 }
 
 func GetShippingByID(idShipping int, db *sql.DB) (*models.Shipping, error) {
-	u := new(models.Shipping)
-	err := db.QueryRow("SELECT id_shipping, id_user, shipping_number, amount, status FROM Shippings WHERE id_shipping = $1", idShipping).Scan(
-		&u.IDShipping,
-		&u.IDUser,
-		&u.ShippingNumber,
-		&u.Amount,
-		&u.Status,
+	s := new(models.Shipping)
+	err := db.QueryRow(`SELECT s.id_shipping, s.id_user, s.shipping_number, s.amount, s.status, COALESCE(SUM(t.amount), 0) AS total_debt
+						FROM Shippings s
+						LEFT JOIN transactions t ON s.id_shipping = t.id_shipping 
+						AND t.id_transaction_type = 3
+						WHERE s.id_shipping = $1
+						GROUP BY s.id_shipping, s.id_user, s.shipping_number, s.amount, s.status`, idShipping).Scan(
+		&s.IDShipping,
+		&s.IDUser,
+		&s.ShippingNumber,
+		&s.Amount,
+		&s.Status,
+		&s.Debt,
 	)
 	if err != nil {
 		return nil, err
 	}
-	return u, nil
+	return s, nil
 }
 
 func StatusShippingByID(idShipping int, db *sql.DB) (int, error) {

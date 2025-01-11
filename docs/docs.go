@@ -509,6 +509,9 @@ const docTemplate = `{
                 "created_date": {
                     "type": "string"
                 },
+                "debt": {
+                    "type": "number"
+                },
                 "email": {
                     "type": "string"
                 },

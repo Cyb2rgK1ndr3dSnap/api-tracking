@@ -1,12 +1,22 @@
 package controllers
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 )
 
 func ViewLogin(c *gin.Context) {
 
-	c.HTML(200, "login.html", nil)
+	_, err := c.Cookie("jwt_token")
+
+	if err != nil {
+		c.HTML(200, "login.html", nil)
+		c.Abort()
+		return
+	}
+
+	c.Redirect(http.StatusFound, "/index")
 }
 
 func ViewIndex(c *gin.Context) {

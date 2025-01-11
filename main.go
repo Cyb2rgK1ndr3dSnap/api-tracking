@@ -10,6 +10,7 @@ import (
 	_ "github.com/Cyb2rgK1ndr3dSnap/api-tracking/docs"
 	"github.com/Cyb2rgK1ndr3dSnap/api-tracking/initializers"
 	"github.com/Cyb2rgK1ndr3dSnap/api-tracking/routes"
+	"github.com/Cyb2rgK1ndr3dSnap/api-tracking/tasks"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	swaggerFiles "github.com/swaggo/files"
@@ -70,24 +71,19 @@ func main() {
 		c.Data(http.StatusOK, "image/x-icon", favicon)
 	})
 
-	/*
-		r.LoadHTMLGlob("templates/*")
-
-		r.Static("/static", "./static")
-
-		r.StaticFile("/favicon.ico", "./static/favicon.ico")
-	*/
-
 	r.Use(func(c *gin.Context) {
 		c.Set("db", db)
 		c.Next()
 	})
+
+	go tasks.StartScheduler(db)
 
 	routes.ViewRoutes(r)
 	routes.UserRoutes(r)
 	routes.ShippingRoutes(r)
 	routes.TransactionRoutes(r)
 	routes.BusinessRoutes(r)
+	routes.LockerRoutes(r)
 	routes.StatusRoutes(r)
 
 	log.Println("Server is running on port:", port)

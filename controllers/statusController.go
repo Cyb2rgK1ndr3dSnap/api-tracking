@@ -20,7 +20,7 @@ func GetStatus(c *gin.Context) {
 
 	// Verifica si los estados están en la caché
 	if cachedStatuses, found := cache.Get("statuses"); found {
-		c.JSON(200, gin.H{"statuses": cachedStatuses})
+		c.JSON(200, cachedStatuses)
 		return
 	}
 

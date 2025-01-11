@@ -23,7 +23,7 @@ async function FetchStatuses() {
         const statusDetailElement = document.getElementById("detail-status");
         const data = await response.json();
         // Poblar el mapa de estados
-        data.statuses.forEach(status => {
+        data.forEach(status => {
             const option = document.createElement("option");
             option.value = status.id_status;
             option.textContent = status.name;

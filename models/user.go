@@ -36,8 +36,22 @@ type LoginUser struct {
 	Token    string `json:"token,omitempty"`
 }
 
+type UpdateUser struct {
+	IDUser      int    `json:"id_user" binding:"required"`
+	FirstName   string `json:"firstname,omitempty"`
+	LastName    string `json:"lastname,omitempty"`
+	UserName    string `json:"username,omitempty"`
+	Email       string `json:"email,omitempty"`
+	Direction   string `json:"direction,omitempty"`
+	PhoneNumber string `json:"phone_number,omitempty"`
+	CC          string `json:"cc,omitempty"`
+	IDRole      int    `json:"id_role,omitempty"`
+}
+
 type ReadUser struct {
-	IDUser   int `form:"-"`
-	IDRole   int `form:"-"`
-	UserType int `json:"user_type,omitempty"`
+	IDUser   int    `form:"-"`
+	IDRole   int    `form:"-"`
+	UserName string `form:"username,omitempty"`
+	Email    string `form:"email,omitempty"`
+	UserType int    `form:"user_type,omitempty"`
 }

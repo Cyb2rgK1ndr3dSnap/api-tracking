@@ -143,9 +143,10 @@ func GetShipping(c *gin.Context) {
 			&shipping.ExpirationDate,
 			&shipping.Email,
 			&shipping.Username,
+			&shipping.Debt,
 		)
 		if err != nil {
-			c.JSON(400, gin.H{"error": "Error with database"})
+			c.JSON(400, gin.H{"error": "Error with database" + err.Error()})
 			return
 		}
 		shippings = append(shippings, shipping)
@@ -346,7 +347,7 @@ func CloseShipping(c *gin.Context) {
 		IDUser:            shipping.IDUser,
 		IDShipping:        shipping.IDShipping,
 		IDTransactionType: 1,
-		Amount:            (shipping.Amount * -1),
+		Amount:            ((shipping.Amount + shipping.Debt) * -1),
 	}
 
 	shippingU := models.UpdateShipping{

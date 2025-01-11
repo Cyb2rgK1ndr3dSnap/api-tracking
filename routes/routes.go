@@ -24,11 +24,12 @@ func ViewRoutes(r *gin.Engine) {
 func UserRoutes(r *gin.Engine) {
 	userGroup := r.Group("/user")
 	{
-		userGroup.GET("", security.AuthMiddleware())
+		userGroup.GET("/test", security.AuthMiddleware())
 		userGroup.POST("", controllers.RegisterUser)
 		userGroup.POST("/login", controllers.LoginUser)
 		userGroup.POST("/logout", security.AuthMiddleware(), controllers.LogoutUser)
 		//Web API
+		userGroup.GET("", security.AuthMiddleware(), security.AdminMiddleware(), controllers.GetUsers)
 		userGroup.POST("/total", security.AuthMiddleware(), security.AdminMiddleware(), controllers.GetUsersTotal)
 	}
 }
@@ -56,13 +57,20 @@ func TransactionRoutes(r *gin.Engine) {
 func BusinessRoutes(r *gin.Engine) {
 	businessGroup := r.Group("/business")
 	{
-		businessGroup.GET("", controllers.BusinessInformation)
+		businessGroup.GET("", security.AuthMiddleware(), controllers.GetBusinessInformation)
+	}
+}
+
+func LockerRoutes(r *gin.Engine) {
+	lockerGroup := r.Group("/locker")
+	{
+		lockerGroup.GET("", security.AuthMiddleware(), controllers.GetLocker)
 	}
 }
 
 func StatusRoutes(r *gin.Engine) {
 	statusGroup := r.Group("/status")
 	{
-		statusGroup.GET("", controllers.GetStatus)
+		statusGroup.GET("", security.AuthMiddleware(), controllers.GetStatus)
 	}
 }

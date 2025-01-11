@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func BusinessInformation(c *gin.Context) {
+func GetBusinessInformation(c *gin.Context) {
 
 	supportNumber := os.Getenv("SUPPORT_NUMBER")
 	accountBankNumber := os.Getenv("ACCOUNT_BANKNUMBER")
